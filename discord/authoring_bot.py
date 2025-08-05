@@ -199,6 +199,16 @@ Examples: `!tools Create a fantasy character` or `!tools Write a chapter about d
 `!generate-video <prompt> [duration]` - Generate video from prompt
 `!generate-sound <prompt> [style]` - Generate sound effects
 
+**Enhanced Multimodal Systems:**
+`!enhanced-image <prompt> [style] [model]` - Enhanced image generation with multiple models
+`!enhanced-voice <text> [preset] [engine]` - Enhanced voice with multiple TTS engines
+`!enhanced-video <prompt> [style] [api]` - Enhanced video generation with multiple APIs
+`!enhanced-audio <type> [preset]` - Enhanced audio with effects and analysis
+`!enhanced-character <name> <description>` - Create complete character multimedia package
+`!enhanced-story <title> <genre> <description>` - Create complete story multimedia package
+`!system-status` - Show status of all enhanced multimodal systems
+`!available-styles [system]` - Show available styles for each system
+
 **Example:** `!create-project "My Novel" "Fantasy" "Young Adult" 50000`
 """
             await self._send_long_message(ctx, help_text, "📚 **LUNA COMMANDS**")
