@@ -1,318 +1,349 @@
-# Authoring Bot - Your Personal AI Writing Assistant
+# AI Writing Companion
 
-**Authoring Bot** is a comprehensive AI-powered writing assistant that helps you create, manage, and monetize your authoring projects. Built with local LLM integration, it provides text, image, video, and voice generation capabilities through a Discord interface with personalized writing assistance.
+An advanced AI-powered writing assistant with multimodal capabilities, emotional intelligence, and comprehensive project management.
+
+## 🚀 Quick Start
+
+### Launch Script
+Use the convenient launch script to access all components:
+
+```bash
+# System management
+python launch.py dashboard     # Launch system dashboard
+python launch.py analytics     # Launch analytics dashboard
+python launch.py projects      # Launch project manager
+
+# Bot management
+python launch.py bot           # Start Discord bot
+python launch.py tests         # Run test suite
+
+# Documentation
+python launch.py docs          # Open documentation
+python launch.py help          # Show help
+```
+
+### Direct Script Access
+```bash
+# Core system components
+python core/system_dashboard.py --monitor
+python core/analytics_dashboard.py --system-report
+python core/project_manager.py --list
+
+# Scripts
+python scripts/start_bot.py
+python scripts/run_tests.py
+python scripts/setup.py
+```
 
 ## 📁 Project Structure
 
-The project is organized into logical folders for easy navigation:
-
 ```
 Foundry_Bot/
-├── 📁 framework/          # Main framework and plugins
-├── 📁 discord/           # Discord bot interface
-├── 📁 scripts/           # Utility scripts and tools
-│   ├── 📁 tests/        # Test scripts
-│   ├── 📁 tools/        # Development tools
-│   └── 📁 performance/  # Performance testing
-├── 📁 docs/             # Documentation and guides
-├── 📁 models/           # AI models and training data
-├── 📁 Book_Collection/  # Your writing samples
-└── 📁 media/           # Generated content output
+├── launch.py                          # Main launcher script
+├── README.md                          # This file
+├── requirements.txt                   # Python dependencies
+├── .gitignore                        # Git ignore rules
+│
+├── core/                             # Core system components
+│   ├── system_dashboard.py           # System monitoring dashboard
+│   ├── analytics_dashboard.py        # Analytics and insights
+│   ├── project_manager.py            # Project management system
+│   ├── health_check.py               # System health monitoring
+│   ├── config.py                     # Configuration management
+│   └── tests/                        # Test files
+│       ├── test_enhanced_multimodal_systems.py
+│       ├── test_enhanced_psychological_emotions.py
+│       └── test_multimodal_system.py
+│
+├── framework/                        # Core framework
+│   ├── framework_tool.py             # Main framework tool
+│   └── plugins/                      # Framework plugins
+│       ├── enhanced_image_generator.py
+│       ├── enhanced_voice_generator.py
+│       ├── enhanced_video_generator.py
+│       ├── enhanced_audio_processor.py
+│       ├── multimodal_orchestrator.py
+│       ├── writing_assistant.py
+│       ├── personality_engine.py
+│       ├── personalization_engine.py
+│       ├── learning_engine.py
+│       ├── tool_manager.py
+│       └── text_generator.py
+│
+├── discord/                          # Discord bot interface
+│   ├── authoring_bot.py              # Main Discord bot
+│   ├── enhanced_multimodal_commands.py
+│   └── core/                         # Discord core components
+│
+├── astra_emotional_fragments/        # Emotional system
+│   ├── emotional_blender.py          # Enhanced emotional blending
+│   ├── dynamic_emotion_engine.py     # Dynamic emotion engine
+│   ├── breaking.md                   # Emotional fragments
+│   ├── cold.md
+│   ├── defiant.md
+│   ├── flustered.md
+│   ├── nurturing.md
+│   ├── obsessed.md
+│   └── reverent.md
+│
+├── multimodal/                       # Multimodal systems
+│   ├── image/                        # Image generation
+│   │   ├── enhanced_image_generator.py
+│   │   ├── input/
+│   │   └── output/
+│   ├── voice/                        # Voice generation
+│   │   ├── enhanced_voice_generator.py
+│   │   ├── input/
+│   │   └── output/
+│   ├── video/                        # Video generation
+│   │   ├── enhanced_video_generator.py
+│   │   ├── input/
+│   │   └── output/
+│   └── audio/                        # Audio processing
+│       ├── enhanced_audio_processor.py
+│       ├── input/
+│       └── output/
+│
+├── profile/                          # User and personality management
+│   ├── bot_profile/                  # AI personality profiles
+│   │   ├── personality/
+│   │   │   ├── personality_creator.py
+│   │   │   └── personality_manager.py
+│   │   └── CHARACTER_ROLEPLAY_GUIDE.md
+│   ├── user_profile/                 # User profile management
+│   │   └── user_profile_manager.py
+│   ├── CHARACTER_ROLEPLAY_GUIDE.md
+│   └── PERSONALITY_SYSTEM_GUIDE.md
+│
+├── data/                             # Data management
+│   ├── user_data/                    # User interaction data
+│   ├── training_data/                # AI training data
+│   ├── analytics/                    # System analytics
+│   ├── backups/                      # Data backups
+│   └── exports/                      # Data exports
+│
+├── Book_Collection/                  # Writing projects
+│   ├── Anna/                         # Author projects
+│   ├── Eve/
+│   ├── Mavlon/
+│   ├── Random/
+│   ├── Relic/
+│   └── Shadow/
+│
+├── docs/                             # Documentation
+│   ├── guides/                       # User guides
+│   │   ├── ENHANCED_MULTIMODAL_GUIDE.md
+│   │   └── DISCORD_COMMANDS_GUIDE.md
+│   ├── summaries/                    # System summaries
+│   │   ├── PSYCHOLOGICAL_EMOTIONAL_SYSTEM_SUMMARY.md
+│   │   ├── MULTIMODAL_SYSTEM_SUMMARY.md
+│   │   └── ENHANCED_FEATURES_SUMMARY.md
+│   ├── PROJECT_STRUCTURE.md
+│   └── LUNA_CAPABILITIES_DOCUMENTATION.md
+│
+├── scripts/                          # Utility scripts
+│   ├── start_bot.py                  # Discord bot launcher
+│   ├── run_tests.py                  # Test runner
+│   └── setup.py                      # Setup script
+│
+├── models/                           # AI models and data
+├── .venv/                           # Python virtual environment
+└── __pycache__/                     # Python cache
 ```
 
-See `PROJECT_STRUCTURE.md` for detailed folder organization.
+## 🎯 Core Features
 
-## 🚀 Features
+### 🤖 AI Writing Assistant
+- **Writing Assistance**: Generate chapters, develop characters, create plots
+- **Content Enhancement**: Rewrite, expand, and improve existing content
+- **Creative Collaboration**: Brainstorm ideas and develop story elements
+- **Genre Adaptation**: Adapt writing style for different genres
 
-### **Text Generation**
-- **Chapter Writing** - Generate complete chapters with plot progression
-- **Character Development** - Create detailed character profiles and arcs
-- **Plot Generation** - Develop comprehensive story outlines
-- **Story Writing** - Write complete short stories and novels
-- **Dialogue Generation** - Create character-specific dialogue
-- **Description Writing** - Generate vivid scene descriptions
+### 🎭 Emotional Intelligence
+- **Psychological Models**: Plutchik's Wheel of Emotions and Maslow's Hierarchy
+- **Dynamic Emotions**: Real-time emotional adaptation and context switching
+- **Emotional Blending**: Sophisticated emotional state management
+- **Personality Development**: Character personality evolution
 
-### **Media Generation**
-- **Book Covers** - Generate professional book covers by genre
-- **Book Trailers** - Create promotional video trailers
-- **Audiobook Narration** - Convert chapters to audio narration
-- **Character Art** - Generate character illustrations
-- **Scene Illustrations** - Create visual scene depictions
+### 🎨 Multimodal Capabilities
+- **Image Generation**: Stable Diffusion integration with multiple styles
+- **Voice Generation**: Multiple TTS engines (pyttsx3, gTTS, ElevenLabs)
+- **Video Generation**: Video creation with various APIs and effects
+- **Audio Processing**: Sound effects, ambient audio, and audio enhancement
+- **Multimodal Orchestration**: Unified coordination of all media types
 
-### **Project Management**
-- **Project Tracking** - Manage multiple writing projects
-- **Progress Monitoring** - Track word count and completion goals
-- **Character Database** - Organize character profiles and relationships
-- **Plot Development** - Structure story arcs and plot points
-- **Sales Tracking** - Monitor revenue and royalties
+### 📊 Project Management
+- **Project Organization**: Comprehensive project tracking and management
+- **Chapter Management**: Chapter creation, editing, and progress tracking
+- **Character Development**: Character profiles and development tracking
+- **AI Integration**: AI-powered suggestions and assistance
+- **Progress Analytics**: Detailed progress tracking and statistics
 
-### **Business Tools**
-- **Sales Analytics** - Track book performance and revenue
-- **Market Analysis** - Research genre trends and opportunities
-- **Writing Statistics** - Monitor writing habits and productivity
-- **Financial Tracking** - Manage author income and expenses
+### 📈 Analytics & Monitoring
+- **System Dashboard**: Real-time system health monitoring
+- **Analytics Dashboard**: User behavior and system performance analytics
+- **Performance Insights**: Data-driven optimization recommendations
+- **Usage Tracking**: Comprehensive usage pattern analysis
 
-### **AI-Powered Features**
-- **Personalization Engine** - Learns from your writing style and adapts responses
-- **Learning Engine** - Processes large datasets (Wikipedia, your books) for training
-- **Tool Use** - Advanced function calling for enhanced authoring capabilities
-- **Hardware Optimization** - Automatically optimized for your system specifications
+### 🎮 Discord Integration
+- **Natural Language**: @mention functionality for natural conversation
+- **Command System**: Comprehensive Discord command interface
+- **Multimodal Commands**: Image, voice, video, and audio generation
+- **Enhanced Commands**: Advanced multimodal capabilities
+- **Real-time Interaction**: Live system interaction and monitoring
 
-## 🏗️ Architecture
+## 🚀 Getting Started
 
-### **Core Components**
-- **Framework Core** (`framework/framework_tool.py`) - Main orchestration system
-- **Discord Interface** (`discord/authoring_bot.py`) - Discord bot commands
-- **Plugin System** - Modular capabilities for different media types
+### Prerequisites
+- Python 3.12+
+- Discord Bot Token
+- Required API keys (optional for enhanced features)
 
-### **Plugin System**
-- **Text Generator** (`framework/plugins/text_generator.py`) - Story and content generation
-- **Image Generator** (`framework/plugins/image_generator.py`) - Visual content creation
-- **Video Generator** (`framework/plugins/video_generator.py`) - Video content generation
-- **Voice Generator** (`framework/plugins/voice_generator.py`) - Audio narration and TTS
-
-## 🎯 Discord Commands
-
-### **Project Management**
-```
-!create-project <name> <genre> <audience> <word_count>
-!list-projects
-!project-info <name>
-```
-
-### **Text Generation**
-```
-!write-chapter <project> <title> <requirements>
-!develop-character <project> <name> <requirements>
-!generate-plot <project> <requirements>
-!write-story <genre> <audience> <requirements>
-```
-
-### **Media Generation**
-```
-!generate-cover <project> <description>
-!create-trailer <project> <description>
-!narrate-chapter <project> <chapter_number>
-```
-
-### **Business Tracking**
-```
-!track-sales <project> <revenue> <royalties>
-!get-stats
-!analyze-market <genre>
-```
-
-### **AI-Powered Commands**
-```
-!personalize analyze          # Analyze your writing style
-!personalize suggestions      # Get personalized writing tips
-!personalize stats           # Show personalization statistics
-!tools <message>             # Use AI tools for advanced tasks
-!learning-stats              # Show learning engine statistics
-```
-
-### **Message Handling**
-The bot automatically handles long messages by splitting them into multiple parts when they exceed Discord's 2000 character limit. Each part is sent with a continuation indicator.
-
-### **Utility**
-```
-!help
-!status
-```
-
-## 🛠️ Setup Instructions
-
-### **1. Environment Setup**
+### Installation
 ```bash
+# Clone the repository
+git clone https://github.com/Nemeca99/Foundry_Bot.git
+cd Foundry_Bot
+
 # Create virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+python -m venv .venv
+.venv\Scripts\activate  # Windows
+source .venv/bin/activate  # Linux/Mac
 
 # Install dependencies
 pip install -r requirements.txt
+
+# Configure environment
+cp config.py.example config.py
+# Edit config.py with your settings
 ```
 
-### **2. Hardware Optimization**
+### Quick Launch
 ```bash
-# Scan your system and get optimized settings
-python scripts/tools/hardware_scan.py
+# Launch system dashboard
+python launch.py dashboard
 
-# Test performance with optimized settings
-python scripts/performance/test_optimized_performance.py
+# Start Discord bot
+python launch.py bot
+
+# Run analytics
+python launch.py analytics --system-report
+
+# Manage projects
+python launch.py projects --list
 ```
 
-### **2. Configuration**
-Create a `.env` file in the project root:
-```env
+## 📚 Documentation
+
+### User Guides
+- [Enhanced Multimodal Guide](docs/guides/ENHANCED_MULTIMODAL_GUIDE.md)
+- [Discord Commands Guide](docs/guides/DISCORD_COMMANDS_GUIDE.md)
+
+### System Documentation
+- [Project Structure](docs/PROJECT_STRUCTURE.md)
+- [Luna Capabilities](docs/LUNA_CAPABILITIES_DOCUMENTATION.md)
+
+### System Summaries
+- [Psychological Emotional System](docs/summaries/PSYCHOLOGICAL_EMOTIONAL_SYSTEM_SUMMARY.md)
+- [Multimodal System](docs/summaries/MULTIMODAL_SYSTEM_SUMMARY.md)
+- [Enhanced Features](docs/summaries/ENHANCED_FEATURES_SUMMARY.md)
+
+## 🎯 Use Cases
+
+### For Writers
+- **Creative Writing**: AI-assisted story development and character creation
+- **Content Enhancement**: Improve and expand existing content
+- **Genre Exploration**: Experiment with different writing styles
+- **Project Management**: Organize and track writing projects
+
+### For Developers
+- **AI Integration**: Advanced AI writing assistant capabilities
+- **Multimodal Systems**: Image, voice, video, and audio generation
+- **Emotional Intelligence**: Sophisticated emotional modeling
+- **Analytics**: Comprehensive system monitoring and analytics
+
+### For Researchers
+- **Psychological Modeling**: Advanced emotional and psychological systems
+- **Multimodal AI**: Comprehensive multimodal AI capabilities
+- **User Behavior Analysis**: Detailed analytics and insights
+- **System Architecture**: Modular, extensible system design
+
+## 🔧 Configuration
+
+### Environment Variables
+```bash
+# Discord Bot
 DISCORD_TOKEN=your_discord_bot_token
-OLLAMA_BASE_URL=http://localhost:1234
-OLLAMA_MODEL_NAME=cognitivecomputations_dolphin-mistral-24b-venus-edition
-ALLOWED_USERS=your_discord_user_id
-ALLOWED_CHANNELS=your_discord_channel_id
 BOT_PREFIX=!
+
+# API Keys (optional)
+OPENAI_API_KEY=your_openai_key
+ELEVENLABS_API_KEY=your_elevenlabs_key
+STABILITY_API_KEY=your_stability_key
 ```
 
-### **3. Local LLM Setup**
-Ensure you have LM Studio or Ollama running locally with a compatible model.
+### Configuration File
+Edit `core/config.py` to customize:
+- Discord bot settings
+- API configurations
+- System preferences
+- Feature toggles
 
-### **4. Start the Bot**
+## 🧪 Testing
+
+### Run All Tests
 ```bash
-python scripts/start_authoring_bot.py
+python launch.py tests
 ```
 
-## 🧪 Testing & Development
-
-### **Running Tests**
+### Individual Test Suites
 ```bash
-# Test the main bot functionality
-python scripts/tests/test_authoring_bot.py
+# Multimodal systems
+python core/tests/test_enhanced_multimodal_systems.py
 
-# Test personalization features
-python scripts/tests/test_personalization.py
+# Emotional systems
+python core/tests/test_enhanced_psychological_emotions.py
 
-# Test tool use functionality
-python scripts/tests/test_tool_use.py
-
-# Test learning engine
-python scripts/tests/test_learning.py
+# Basic multimodal
+python core/tests/test_multimodal_system.py
 ```
 
-### **Development Tools**
+## 📊 Monitoring
+
+### System Dashboard
 ```bash
-# Debug LM Studio connection
-python scripts/tools/debug_lm_studio.py
-
-# Quick connection test
-python scripts/tools/quick_test.py
-
-# Hardware scan and optimization
-python scripts/tools/hardware_scan.py
+python launch.py dashboard --monitor --interval 60
 ```
 
-## 🎯 Hardware Optimization
-
-Your system has been scanned and optimized:
-- **OS**: Windows 11
-- **CPU**: 8-core Intel (16 logical cores)
-- **RAM**: 32GB (High Performance)
-- **GPU**: NVIDIA GeForce RTX 3060 Ti (8GB VRAM)
-- **Performance Score**: 10/10 (Perfect!)
-
-The bot is configured with optimal settings for your high-performance system.
-
-## 📊 Usage Examples
-
-### **Creating Your First Project**
-```
-!create-project "My Fantasy Novel" "Fantasy" "Young Adult" 80000
+### Analytics Dashboard
+```bash
+python launch.py analytics --system-report --period month
 ```
 
-### **Writing a Chapter**
+### Health Check
+```bash
+python core/health_check.py
 ```
-!write-chapter "My Fantasy Novel" "The Dragon's Call" "Write an opening chapter that introduces a young wizard discovering their magical abilities"
-```
-
-### **Developing a Character**
-```
-!develop-character "My Fantasy Novel" "Aria" "A 16-year-old wizard apprentice with a mysterious past and hidden powers"
-```
-
-### **Generating a Book Cover**
-```
-!generate-cover "My Fantasy Novel" "A mystical forest with glowing runes and a young wizard in robes"
-```
-
-### **Creating a Book Trailer**
-```
-!create-trailer "My Fantasy Novel" "Epic fantasy adventure with magic, dragons, and a young hero's journey"
-```
-
-### **Tracking Sales**
-```
-!track-sales "My Fantasy Novel" 1500.00 450.00
-```
-
-## 🔧 Plugin Development
-
-### **Creating a New Plugin**
-1. Create a new file in `framework/plugins/`
-2. Implement the plugin class with an `initialize(framework)` function
-3. The framework will automatically load and register the plugin
-
-### **Plugin Interface**
-```python
-class MyPlugin:
-    def __init__(self, framework):
-        self.framework = framework
-        # Initialize plugin
-    
-    def my_function(self, *args):
-        # Plugin functionality
-        pass
-
-def initialize(framework):
-    return MyPlugin(framework)
-```
-
-## 📈 Monetization Strategy
-
-### **Revenue Streams**
-- **Book Sales** - Track revenue from book sales
-- **Audiobook Sales** - Monitor audiobook performance
-- **Merchandise** - Track related product sales
-- **Speaking Engagements** - Monitor speaking income
-- **Teaching** - Track writing course revenue
-
-### **Business Analytics**
-- **Sales Tracking** - Monitor book performance over time
-- **Market Analysis** - Research genre trends and opportunities
-- **Reader Analytics** - Understand your audience
-- **Financial Planning** - Plan for sustainable author income
-
-## 🎭 Personality & Style
-
-The Authoring Bot maintains a professional, encouraging personality that:
-- **Motivates** - Provides positive reinforcement for writing progress
-- **Guides** - Offers constructive feedback and suggestions
-- **Organizes** - Helps structure and manage complex projects
-- **Analyzes** - Provides data-driven insights for business decisions
-- **Creates** - Generates high-quality content across all media types
-
-## 🔒 Security & Permissions
-
-- **User Authorization** - Only authorized users can access the bot
-- **Channel Restrictions** - Commands only work in designated channels
-- **Data Privacy** - All project data is stored locally
-- **Content Safety** - Generated content follows ethical guidelines
-
-## 🚀 Future Enhancements
-
-### **Planned Features**
-- **Advanced AI Models** - Integration with cutting-edge language models
-- **Real-time Collaboration** - Multi-author project support
-- **Publishing Integration** - Direct publishing platform connections
-- **Advanced Analytics** - Deep market and reader insights
-- **Mobile Interface** - Mobile app for on-the-go writing
-
-### **Media Generation**
-- **Advanced Image Generation** - High-quality book covers and illustrations
-- **Video Production** - Professional book trailers and promotional content
-- **Audiobook Creation** - Full audiobook production pipeline
-- **3D Content** - Interactive 3D book previews
 
 ## 🤝 Contributing
 
-This project follows the Astra framework architecture. When contributing:
-1. Follow the BULMA header protocol
-2. Test all changes thoroughly
-3. Maintain backward compatibility
-4. Document new features
-5. Follow the existing code style
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests for new functionality
+5. Submit a pull request
 
 ## 📄 License
 
-This project is built on the Astra framework and follows its licensing terms.
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 🙏 Acknowledgments
+
+- **Discord.py**: Discord bot framework
+- **Stable Diffusion**: Image generation capabilities
+- **Plutchik's Wheel**: Emotional modeling foundation
+- **Maslow's Hierarchy**: Psychological framework
 
 ---
 
-**Ready to start your authoring journey?** Set up the bot and begin creating your next masterpiece! 🚀 
+**AI Writing Companion** - Where creativity meets artificial intelligence, and every story finds its voice. 
