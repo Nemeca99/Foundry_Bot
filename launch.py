@@ -12,34 +12,46 @@ from pathlib import Path
 project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
+
 def launch_system_dashboard():
     """Launch the system dashboard"""
     from core.system_dashboard import main
+
     main()
+
 
 def launch_analytics_dashboard():
     """Launch the analytics dashboard"""
     from core.analytics_dashboard import main
+
     main()
+
 
 def launch_project_manager():
     """Launch the project manager"""
     from core.project_manager import main
+
     main()
+
 
 def launch_discord_bot():
     """Launch the Discord bot"""
     import subprocess
+
     subprocess.run([sys.executable, "scripts/start_bot.py"])
+
 
 def launch_tests():
     """Launch the test suite"""
     import subprocess
+
     subprocess.run([sys.executable, "scripts/run_tests.py"])
+
 
 def show_help():
     """Show help information"""
-    print("""
+    print(
+        """
 ╔══════════════════════════════════════════════════════════════════════════════╗
 ║                           AI WRITING COMPANION LAUNCHER                      ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
@@ -70,16 +82,18 @@ For detailed help on each component:
   python launch.py dashboard --help
   python launch.py analytics --help
   python launch.py projects --help
-""")
+"""
+    )
+
 
 def main():
     """Main launcher function"""
     if len(sys.argv) < 2:
         show_help()
         return
-    
+
     command = sys.argv[1].lower()
-    
+
     if command == "dashboard":
         launch_system_dashboard()
     elif command == "analytics":
@@ -92,6 +106,7 @@ def main():
         launch_tests()
     elif command == "docs":
         import subprocess
+
         subprocess.run(["explorer", "docs"])
     elif command == "help":
         show_help()
@@ -99,5 +114,6 @@ def main():
         print(f"❌ Unknown command: {command}")
         show_help()
 
+
 if __name__ == "__main__":
-    main() 
+    main()
