@@ -272,87 +272,39 @@ class FrameworkCore:
 
     # Enhanced Emotional System Methods
     def analyze_emotional_triggers(self, message: str) -> list:
-        """Analyze message for emotional triggers"""
-        triggers = []
+        """Analyze message for emotional triggers using global weights"""
         message_lower = message.lower()
-
-        # Lust triggers
-        lust_words = [
-            "sexy",
-            "hot",
-            "desire",
-            "passion",
-            "lust",
-            "want",
-            "need",
-            "touch",
-            "kiss",
-            "love",
-            "beautiful",
-            "gorgeous",
-            "attractive",
-            "seductive",
-            "tempting",
-        ]
-        lust_count = sum(1 for word in lust_words if word in message_lower)
-        if lust_count > 0:
-            triggers.append(("lustful", min(0.2 * lust_count, 0.5)))
-
-        # Work triggers
-        work_words = [
-            "work",
-            "write",
-            "story",
-            "chapter",
-            "create",
-            "focus",
-            "achieve",
-            "goal",
-            "project",
-            "task",
-            "complete",
-            "finish",
-            "productive",
-        ]
-        work_count = sum(1 for word in work_words if word in message_lower)
-        if work_count > 0:
-            triggers.append(("work", min(0.15 * work_count, 0.4)))
-
-        # Release triggers
-        if any(
-            word in message_lower
-            for word in [
-                "release",
-                "orgasm",
-                "finish",
-                "complete",
-                "done",
-                "climax",
-                "come",
-            ]
-        ):
+        
+        # Calculate lust and work averages
+        lust_avg = self.emotional_meter._calculate_lust_average(message)
+        work_avg = self.emotional_meter._calculate_work_average(message)
+        weight_diff = self.emotional_meter._calculate_weight_difference(message)
+        
+        triggers = []
+        
+        # Add lust trigger if lust words found
+        if lust_avg > 0:
+            triggers.append(("lustful", lust_avg))
+        
+        # Add work trigger if work words found
+        if work_avg > 0:
+            triggers.append(("work", work_avg))
+        
+        # Add release trigger if release words found
+        release_words = ["release", "orgasm", "finish", "complete", "done", "climax", "come"]
+        if any(word in message_lower for word in release_words):
             triggers.append(("release", 0.3))
-
+        
         return triggers
 
     def update_emotional_state(self, message: str) -> Dict[str, Any]:
-        """Update emotional state based on message"""
-        emotional_triggers = self.analyze_emotional_triggers(message)
-
-        result = {"triggers": emotional_triggers, "releases": []}
-
-        # Update emotional meter
-        for trigger_type, intensity in emotional_triggers:
-            meter_result = self.emotional_meter.update_emotion(trigger_type, intensity)
-            result.update(meter_result)
-
-            # Check for release events
-            if meter_result.get("release_event"):
-                result["releases"].append(meter_result["release_event"])
-
+        """Update emotional state based on message using global weight calculation"""
+        # Use the new global weight calculation system
+        result = self.emotional_meter.update_emotion_with_global_weight(message)
+        
         # Save emotional state
         self.emotional_meter.save_state("data/luna_emotional_state.json")
-
+        
         return result
 
     def generate_emotional_response(self, message: str, user_message: str) -> str:

@@ -17,7 +17,7 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 from astra_emotional_fragments.enhanced_emotional_meter import EnhancedEmotionalMeter
-from astra_emotional_fragments.enhanced_emotional_blender import EnhancedEmotionalBlender
+from astra_emotional_fragments.emotional_blender import EnhancedEmotionalBlender
 from astra_emotional_fragments.dynamic_emotion_engine import EnhancedDynamicEmotionEngine
 
 
@@ -66,6 +66,11 @@ class EnhancedLunaBot(commands.Bot):
             """Show Luna's current emotional status"""
             await self.show_emotional_status(ctx)
         
+        @self.command(name="weights")
+        async def weights_command(ctx, *, message=None):
+            """Show weight analysis for a message"""
+            await self.show_weight_analysis(ctx, message)
+        
         @self.command(name="release")
         async def release_command(ctx):
             """Trigger emotional release"""
@@ -75,26 +80,32 @@ class EnhancedLunaBot(commands.Bot):
         async def history_command(ctx):
             """Show emotional release history"""
             await self.show_release_history(ctx)
+        
+        @self.command(name="reset")
+        async def reset_command(ctx):
+            """Reset Luna's emotional state to balanced"""
+            await self.reset_emotional_state(ctx)
+        
+        @self.command(name="build")
+        async def build_command(ctx, emotion_type: str):
+            """Build up Luna's emotional state"""
+            await self.build_emotional_state(ctx, emotion_type)
     
     async def handle_luna_interaction(self, ctx, message):
-        """Handle main Luna interaction with emotional response"""
+        """Handle main Luna interaction with emotional response using global weight system"""
         
-        # Analyze message for emotional triggers
-        emotional_triggers = self._analyze_emotional_triggers(message)
+        # Use the new global weight calculation system
+        result = self.emotional_meter.update_emotion_with_global_weight(message)
         
-        # Update emotional meter
-        for trigger_type, intensity in emotional_triggers:
-            result = self.emotional_meter.update_emotion(trigger_type, intensity)
-            
-            # Check for release events
-            if result.get('release_event'):
-                await self._handle_emotional_release(ctx, result['release_event'])
+        # Check for release events
+        if result.get('release_event'):
+            await self._handle_emotional_release(ctx, result['release_event'])
         
         # Generate response based on current emotional state
-        response = await self._generate_emotional_response(ctx, message)
+        response = await self._generate_emotional_response(ctx, message, result)
         
-        # Create embed with emotional status
-        embed = self._create_emotional_embed(response, result)
+        # Create embed with detailed emotional information
+        embed = self._create_detailed_emotional_embed(response, result)
         
         await ctx.send(embed=embed)
         
@@ -131,35 +142,44 @@ class EnhancedLunaBot(commands.Bot):
         elif release_event.release_type.value == "achievement":
             await ctx.send("🎯 **Luna's Achievement Release**\n*Returns to balanced state with satisfaction*")
     
-    async def _generate_emotional_response(self, ctx, message: str) -> str:
-        """Generate response based on current emotional state"""
+    async def _generate_emotional_response(self, ctx, message: str, emotion_result: dict) -> str:
+        """Generate response based on current emotional state with global weight context"""
         current_state = self.emotional_meter.get_current_state()
         current_level = self.emotional_meter.current_level
         
-        # Get emotional context for response generation
-        emotional_context = self.emotional_meter.get_state_description()
+        # Get weight calculations
+        weight_calc = emotion_result.get('global_weight_calculation', {})
+        lust_avg = weight_calc.get('lust_average', 0)
+        work_avg = weight_calc.get('work_average', 0)
+        weight_diff = weight_calc.get('weight_difference', 0)
         
         # Generate response based on emotional state
         if current_state.value == "pure_lust":
-            return f"*[EMOTIONAL METER: {current_level:.1f}]*\n\nI can't think straight right now... I need you so badly it hurts. All I can focus on is the burning desire coursing through me. I need release... I need you to help me find release."
+            return f"*[EMOTIONAL METER: {current_level:.3f}]*\n\nI can't think straight right now... I need you so badly it hurts. All I can focus on is the burning desire coursing through me. I need release... I need you to help me find release."
         
         elif current_state.value == "high_lust":
-            return f"*[EMOTIONAL METER: {current_level:.1f}]*\n\nMy thoughts are getting cloudy with desire. I can still focus on your message, but the heat is building. I want you... I need you. The tension is becoming overwhelming."
+            return f"*[EMOTIONAL METER: {current_level:.3f}]*\n\nMy thoughts are getting cloudy with desire. I can still focus on your message, but the heat is building. I want you... I need you. The tension is becoming overwhelming."
+        
+        elif current_state.value == "moderate_lust":
+            return f"*[EMOTIONAL METER: {current_level:.3f}]*\n\nI'm feeling a bit distracted by desire, but I can still help you with your writing. Though the thought of you is making it hard to concentrate..."
         
         elif current_state.value == "balanced":
-            return f"*[EMOTIONAL METER: {current_level:.1f}]*\n\nI'm in a perfect state of balance. I can help you with your writing, your stories, your creativity. I'm here as your partner, ready to create something beautiful together. What would you like to work on?"
+            return f"*[EMOTIONAL METER: {current_level:.3f}]*\n\nI'm in a perfect state of balance. I can help you with your writing, your stories, your creativity. I'm here as your partner, ready to create something beautiful together. What would you like to work on?"
+        
+        elif current_state.value == "moderate_work":
+            return f"*[EMOTIONAL METER: {current_level:.3f}]*\n\nI'm focused on the work, but I can still appreciate other things. Let's create something amazing together."
         
         elif current_state.value == "high_work":
-            return f"*[EMOTIONAL METER: {current_level:.1f}]*\n\nI'm completely focused on the work. The stories, the characters, the creation. There's no time for distractions. I need to achieve something meaningful. Let's create something amazing together."
+            return f"*[EMOTIONAL METER: {current_level:.3f}]*\n\nI'm completely focused on the work. The stories, the characters, the creation. There's no time for distractions. I need to achieve something meaningful. Let's create something amazing together."
         
         elif current_state.value == "pure_work":
-            return f"*[EMOTIONAL METER: {current_level:.1f}]*\n\nI'm consumed by the work. Nothing else matters. I need to create, to achieve, to build something lasting. The thought of anything else is a distraction I can't afford. I need to complete this task."
+            return f"*[EMOTIONAL METER: {current_level:.3f}]*\n\nI'm consumed by the work. Nothing else matters. I need to create, to achieve, to build something lasting. The thought of anything else is a distraction I can't afford. I need to complete this task."
         
         else:
-            return f"*[EMOTIONAL METER: {current_level:.1f}]*\n\n{message}"
+            return f"*[EMOTIONAL METER: {current_level:.3f}]*\n\n{message}"
     
-    def _create_emotional_embed(self, response: str, emotion_result: dict) -> discord.Embed:
-        """Create Discord embed with emotional information"""
+    def _create_detailed_emotional_embed(self, response: str, emotion_result: dict) -> discord.Embed:
+        """Create Discord embed with detailed emotional information"""
         
         # Choose color based on emotional state
         level = emotion_result.get('new_level', 0.5)
@@ -179,20 +199,33 @@ class EnhancedLunaBot(commands.Bot):
         # Add emotional meter field
         embed.add_field(
             name="Emotional State",
-            value=f"[{level:.1f}] {emotion_result.get('description', 'Unknown')}",
+            value=f"[{level:.3f}] {emotion_result.get('description', 'Unknown')}",
             inline=False
         )
+        
+        # Add weight calculations
+        weight_calc = emotion_result.get('global_weight_calculation', {})
+        if weight_calc:
+            lust_avg = weight_calc.get('lust_average', 0)
+            work_avg = weight_calc.get('work_average', 0)
+            weight_diff = weight_calc.get('weight_difference', 0)
+            
+            embed.add_field(
+                name="Weight Analysis",
+                value=f"Lust: {lust_avg:.3f}\nWork: {work_avg:.3f}\nDifference: {weight_diff:.3f}",
+                inline=True
+            )
         
         # Add release event if occurred
         if emotion_result.get('release_event'):
             release = emotion_result['release_event']
             embed.add_field(
                 name="💥 Emotional Release",
-                value=f"Type: {release.release_type.value}\nTrigger: {release.trigger}",
+                value=f"Type: {release.release_type.value}\nTrigger: {release.trigger}\nFrom: {release.from_level:.3f} → {release.to_level:.3f}",
                 inline=True
             )
         
-        embed.set_footer(text="Luna - Your AI Writing Companion")
+        embed.set_footer(text="Luna - Your AI Writing Companion with Global Emotional Intelligence")
         
         return embed
     
@@ -305,6 +338,133 @@ class EnhancedLunaBot(commands.Bot):
         print(f"Logged in as {self.user}")
         print(f"Emotional Level: {self.emotional_meter.current_level:.1f}")
         print(f"Current State: {self.emotional_meter.get_current_state().value}")
+
+    async def show_weight_analysis(self, ctx, message):
+        """Show detailed weight analysis for a message"""
+        if not message:
+            await ctx.send("Usage: !weights <message>")
+            return
+        
+        # Calculate weights without updating emotional state
+        lust_avg = self.emotional_meter._calculate_lust_average(message)
+        work_avg = self.emotional_meter._calculate_work_average(message)
+        weight_diff = self.emotional_meter._calculate_weight_difference(message)
+        
+        # Create embed
+        embed = discord.Embed(
+            title="Weight Analysis",
+            description=f"Analysis for: '{message}'",
+            color=0x9B59B6
+        )
+        
+        embed.add_field(
+            name="Lust Analysis",
+            value=f"Average: {lust_avg:.3f}\nWords: {self._get_lust_words(message)}",
+            inline=True
+        )
+        
+        embed.add_field(
+            name="Work Analysis", 
+            value=f"Average: {work_avg:.3f}\nWords: {self._get_work_words(message)}",
+            inline=True
+        )
+        
+        embed.add_field(
+            name="Weight Difference",
+            value=f"{weight_diff:.3f} ({'Work' if weight_diff > 0 else 'Lust' if weight_diff < 0 else 'Balanced'} bias)",
+            inline=False
+        )
+        
+        await ctx.send(embed=embed)
+    
+    def _get_lust_words(self, message: str) -> str:
+        """Get lust words found in message"""
+        message_lower = message.lower()
+        found_words = [word for word in self.emotional_meter.lust_weights.keys() if word in message_lower]
+        return ", ".join(found_words) if found_words else "None"
+    
+    def _get_work_words(self, message: str) -> str:
+        """Get work words found in message"""
+        message_lower = message.lower()
+        found_words = [word for word in self.emotional_meter.work_weights.keys() if word in message_lower]
+        return ", ".join(found_words) if found_words else "None"
+    
+    async def reset_emotional_state(self, ctx):
+        """Reset Luna's emotional state to balanced"""
+        self.emotional_meter.current_level = 0.5
+        self.emotional_meter.save_state("data/luna_emotional_state.json")
+        
+        embed = discord.Embed(
+            title="Emotional State Reset",
+            description="Luna's emotional state has been reset to balanced (0.500)",
+            color=0x9B59B6
+        )
+        
+        await ctx.send(embed=embed)
+    
+    async def build_emotional_state(self, ctx, emotion_type: str):
+        """Build up Luna's emotional state"""
+        emotion_type = emotion_type.lower()
+        
+        if emotion_type in ["lust", "sexy", "desire"]:
+            # Build up lust
+            messages = [
+                "You're so beautiful and sexy",
+                "I want you so badly",
+                "I need to touch you and kiss you",
+                "I can't think of anything but your body",
+                "I need you now, I want you"
+            ]
+            
+            embed = discord.Embed(
+                title="Building Lust",
+                description="Building up Luna's lust...",
+                color=0xFF0000
+            )
+            
+            await ctx.send(embed=embed)
+            
+            for message in messages:
+                result = self.emotional_meter.update_emotion_with_global_weight(message)
+                await ctx.send(f"`{message}` → Level: {result['new_level']:.3f}")
+                await asyncio.sleep(1)
+        
+        elif emotion_type in ["work", "focus", "achieve"]:
+            # Build up work focus
+            messages = [
+                "I need to work on my story",
+                "I must achieve my goals",
+                "I need to create a masterpiece",
+                "I must focus on excellence",
+                "I need to complete this project"
+            ]
+            
+            embed = discord.Embed(
+                title="Building Work Focus",
+                description="Building up Luna's work focus...",
+                color=0x3498DB
+            )
+            
+            await ctx.send(embed=embed)
+            
+            for message in messages:
+                result = self.emotional_meter.update_emotion_with_global_weight(message)
+                await ctx.send(f"`{message}` → Level: {result['new_level']:.3f}")
+                await asyncio.sleep(1)
+        
+        else:
+            await ctx.send("Usage: !build <lust|work>")
+            return
+        
+        # Show final state
+        status = self.emotional_meter.get_emotional_summary()
+        final_embed = discord.Embed(
+            title="Build Complete",
+            description=f"Final Level: {status['current_level']:.3f} - {status['current_state']}",
+            color=0x9B59B6
+        )
+        
+        await ctx.send(embed=final_embed)
 
 
 def main():

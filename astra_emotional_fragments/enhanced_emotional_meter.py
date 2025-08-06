@@ -8,7 +8,7 @@ import time
 import json
 from enum import Enum
 from dataclasses import dataclass
-from typing import Optional, Dict, List, Tuple
+from typing import Optional, Dict, List, Tuple, Any
 from pathlib import Path
 
 
@@ -43,7 +43,7 @@ class EmotionalRelease:
 
 class EnhancedEmotionalMeter:
     """
-    Enhanced emotional meter with dual-release system
+    Enhanced emotional meter with dual-release system and global weight calculation
     Models Luna's personality with sophisticated emotional dynamics
     """
     
@@ -57,6 +57,62 @@ class EnhancedEmotionalMeter:
             "lust_release": 0.1,      # Threshold for sexual release
             "work_release": 0.9,      # Threshold for achievement release
             "natural_return": 0.05    # Rate of natural return to balance
+        }
+        
+        # Global weight system
+        self.lust_weights = {
+            "sexy": 0.3,
+            "hot": 0.3,
+            "desire": 0.4,
+            "passion": 0.4,
+            "lust": 0.5,
+            "want": 0.2,
+            "need": 0.2,
+            "touch": 0.3,
+            "kiss": 0.3,
+            "love": 0.4,
+            "beautiful": 0.2,
+            "gorgeous": 0.3,
+            "attractive": 0.2,
+            "seductive": 0.4,
+            "tempting": 0.3,
+            "body": 0.4,
+            "crazy": 0.3,
+            "overwhelming": 0.4,
+            "burning": 0.5,
+            "aching": 0.4,
+            "desperate": 0.5,
+            "intense": 0.4,
+            "wild": 0.4,
+            "feverish": 0.5
+        }
+        
+        self.work_weights = {
+            "work": 0.3,
+            "write": 0.4,
+            "story": 0.3,
+            "chapter": 0.3,
+            "create": 0.4,
+            "focus": 0.4,
+            "achieve": 0.4,
+            "goal": 0.3,
+            "project": 0.3,
+            "task": 0.3,
+            "complete": 0.4,
+            "finish": 0.4,
+            "productive": 0.3,
+            "accomplish": 0.4,
+            "build": 0.3,
+            "develop": 0.3,
+            "craft": 0.3,
+            "perfect": 0.4,
+            "excellence": 0.4,
+            "masterpiece": 0.5,
+            "achievement": 0.4,
+            "success": 0.4,
+            "progress": 0.3,
+            "advance": 0.3,
+            "improve": 0.3
         }
         
         # Load configuration if provided
@@ -261,6 +317,119 @@ class EnhancedEmotionalMeter:
             
             self.release_thresholds.update(config.get("release_thresholds", {}))
             self.state_descriptions.update(config.get("state_descriptions", {}))
+
+    def calculate_global_weight(self, message: str) -> float:
+        """
+        Calculate global emotional weight based on ALL emotions in the message
+        Takes average of all weights and applies difference between lust and work
+        """
+        message_lower = message.lower()
+        
+        # Calculate lust weight
+        lust_total = 0
+        lust_count = 0
+        for word, weight in self.lust_weights.items():
+            if word in message_lower:
+                lust_total += weight
+                lust_count += 1
+        
+        lust_average = lust_total / max(lust_count, 1)
+        
+        # Calculate work weight
+        work_total = 0
+        work_count = 0
+        for word, weight in self.work_weights.items():
+            if word in message_lower:
+                work_total += weight
+                work_count += 1
+        
+        work_average = work_total / max(work_count, 1)
+        
+        # Calculate global weight
+        if lust_count == 0 and work_count == 0:
+            # No emotional triggers, return current level
+            return self.current_level
+        
+        elif lust_count > 0 and work_count == 0:
+            # Only lust triggers - decrease level (more lust)
+            return max(0.0, self.current_level - lust_average * 0.2)
+        
+        elif work_count > 0 and lust_count == 0:
+            # Only work triggers - increase level (more work)
+            return min(1.0, self.current_level + work_average * 0.2)
+        
+        else:
+            # Both lust and work triggers - calculate weighted average
+            total_weight = lust_average + work_average
+            if total_weight == 0:
+                return self.current_level
+            
+            # Calculate the difference and apply it
+            weight_difference = work_average - lust_average
+            adjustment = weight_difference * 0.3  # Scale factor
+            
+            new_level = self.current_level + adjustment
+            return max(0.0, min(1.0, new_level))
+    
+    def update_emotion_with_global_weight(self, message: str) -> Dict[str, Any]:
+        """
+        Update emotional state using global weight calculation
+        """
+        old_level = self.current_level
+        
+        # Calculate new level using global weight
+        new_level = self.calculate_global_weight(message)
+        
+        # Apply the change
+        self.current_level = new_level
+        
+        # Check for releases
+        release_event = None
+        if new_level <= 0.1 and old_level > 0.1:
+            release_event = self._trigger_sexual_release()
+        elif new_level >= 0.9 and old_level < 0.9:
+            release_event = self._trigger_achievement_release()
+        
+        return {
+            "old_level": old_level,
+            "new_level": new_level,
+            "state": self.get_current_state().value,
+            "description": self.get_state_description(),
+            "release_event": release_event,
+            "global_weight_calculation": {
+                "lust_average": self._calculate_lust_average(message),
+                "work_average": self._calculate_work_average(message),
+                "weight_difference": self._calculate_weight_difference(message)
+            }
+        }
+    
+    def _calculate_lust_average(self, message: str) -> float:
+        """Calculate average lust weight for a message"""
+        message_lower = message.lower()
+        lust_total = 0
+        lust_count = 0
+        for word, weight in self.lust_weights.items():
+            if word in message_lower:
+                lust_total += weight
+                lust_count += 1
+        return lust_total / max(lust_count, 1)
+    
+    def _calculate_work_average(self, message: str) -> float:
+        """Calculate average work weight for a message"""
+        message_lower = message.lower()
+        work_total = 0
+        work_count = 0
+        for word, weight in self.work_weights.items():
+            if word in message_lower:
+                work_total += weight
+                work_count += 1
+        return work_total / max(work_count, 1)
+    
+    def _calculate_weight_difference(self, message: str) -> float:
+        """Calculate the difference between work and lust weights"""
+        work_avg = self._calculate_work_average(message)
+        lust_avg = self._calculate_lust_average(message)
+        return work_avg - lust_avg
 
 
 def test_emotional_meter():
