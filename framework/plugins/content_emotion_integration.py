@@ -162,7 +162,18 @@ class ContentEmotionIntegration:
         
         # Check cache first
         if content_id in self.content_emotional_cache:
-            return self.content_emotional_cache[content_id]
+            cached_data = self.content_emotional_cache[content_id]
+            # Convert cached dict back to ContentEmotionalAnalysis object
+            if isinstance(cached_data, dict):
+                return ContentEmotionalAnalysis(
+                    content_id=cached_data['content_id'],
+                    detected_emotions=[EmotionType(emotion) for emotion in cached_data['detected_emotions']],
+                    emotional_intensity=cached_data['emotional_intensity'],
+                    emotional_triggers=[EmotionTrigger(trigger) for trigger in cached_data['emotional_triggers']],
+                    character_emotional_impact=cached_data['character_emotional_impact'],
+                    emotional_summary=cached_data['emotional_summary']
+                )
+            return cached_data
         
         # Detect emotions in content
         detected_emotions = self._detect_emotions_in_content(content)
