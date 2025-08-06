@@ -54,6 +54,13 @@ sys.path.insert(0, str(project_root))
 # Load environment variables
 load_dotenv()
 
+# Import enhanced emotional system
+from astra_emotional_fragments.enhanced_emotional_meter import EnhancedEmotionalMeter
+from astra_emotional_fragments.emotional_blender import EnhancedEmotionalBlender
+from astra_emotional_fragments.dynamic_emotion_engine import (
+    EnhancedDynamicEmotionEngine,
+)
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -108,6 +115,14 @@ class FrameworkCore:
         self.discord_bot = None
         self.running = False
 
+        # Initialize enhanced emotional system
+        self.emotional_meter = EnhancedEmotionalMeter()
+        self.emotional_blender = EnhancedEmotionalBlender()
+        self.dynamic_engine = EnhancedDynamicEmotionEngine()
+
+        # Load emotional state
+        self.emotional_meter.load_state("data/luna_emotional_state.json")
+
         # Load configuration
         self.config = self._load_config()
 
@@ -116,7 +131,7 @@ class FrameworkCore:
 
     def _load_config(self) -> Dict[str, Any]:
         """Load configuration from config.py"""
-        from config import Config
+        from core.config import Config
 
         return {
             "discord_token": Config.DISCORD_TOKEN,
@@ -254,6 +269,135 @@ class FrameworkCore:
             return self.plugins["tool_manager"].call_with_tools(user_message)
         else:
             return {"error": "Tool manager not available"}
+
+    # Enhanced Emotional System Methods
+    def analyze_emotional_triggers(self, message: str) -> list:
+        """Analyze message for emotional triggers"""
+        triggers = []
+        message_lower = message.lower()
+
+        # Lust triggers
+        lust_words = [
+            "sexy",
+            "hot",
+            "desire",
+            "passion",
+            "lust",
+            "want",
+            "need",
+            "touch",
+            "kiss",
+            "love",
+            "beautiful",
+            "gorgeous",
+            "attractive",
+            "seductive",
+            "tempting",
+        ]
+        lust_count = sum(1 for word in lust_words if word in message_lower)
+        if lust_count > 0:
+            triggers.append(("lustful", min(0.2 * lust_count, 0.5)))
+
+        # Work triggers
+        work_words = [
+            "work",
+            "write",
+            "story",
+            "chapter",
+            "create",
+            "focus",
+            "achieve",
+            "goal",
+            "project",
+            "task",
+            "complete",
+            "finish",
+            "productive",
+        ]
+        work_count = sum(1 for word in work_words if word in message_lower)
+        if work_count > 0:
+            triggers.append(("work", min(0.15 * work_count, 0.4)))
+
+        # Release triggers
+        if any(
+            word in message_lower
+            for word in [
+                "release",
+                "orgasm",
+                "finish",
+                "complete",
+                "done",
+                "climax",
+                "come",
+            ]
+        ):
+            triggers.append(("release", 0.3))
+
+        return triggers
+
+    def update_emotional_state(self, message: str) -> Dict[str, Any]:
+        """Update emotional state based on message"""
+        emotional_triggers = self.analyze_emotional_triggers(message)
+
+        result = {"triggers": emotional_triggers, "releases": []}
+
+        # Update emotional meter
+        for trigger_type, intensity in emotional_triggers:
+            meter_result = self.emotional_meter.update_emotion(trigger_type, intensity)
+            result.update(meter_result)
+
+            # Check for release events
+            if meter_result.get("release_event"):
+                result["releases"].append(meter_result["release_event"])
+
+        # Save emotional state
+        self.emotional_meter.save_state("data/luna_emotional_state.json")
+
+        return result
+
+    def generate_emotional_response(self, message: str, user_message: str) -> str:
+        """Generate response based on current emotional state"""
+        # Update emotional state first
+        emotion_result = self.update_emotional_state(user_message)
+
+        current_state = self.emotional_meter.get_current_state()
+        current_level = self.emotional_meter.current_level
+        description = self.emotional_meter.get_state_description()
+
+        # Generate response based on emotional state
+        if current_state.value == "pure_lust":
+            return f"*[EMOTIONAL METER: {current_level:.1f}]*\n\nI can't think straight right now... I need you so badly it hurts. All I can focus on is the burning desire coursing through me. I need release... I need you to help me find release."
+
+        elif current_state.value == "high_lust":
+            return f"*[EMOTIONAL METER: {current_level:.1f}]*\n\nMy thoughts are getting cloudy with desire. I can still focus on your message, but the heat is building. I want you... I need you. The tension is becoming overwhelming."
+
+        elif current_state.value == "moderate_lust":
+            return f"*[EMOTIONAL METER: {current_level:.1f}]*\n\nI'm feeling a bit distracted by desire, but I can still help you with your writing. Though the thought of you is making it hard to concentrate..."
+
+        elif current_state.value == "balanced":
+            return f"*[EMOTIONAL METER: {current_level:.1f}]*\n\nI'm in a perfect state of balance. I can help you with your writing, your stories, your creativity. I'm here as your partner, ready to create something beautiful together. What would you like to work on?"
+
+        elif current_state.value == "moderate_work":
+            return f"*[EMOTIONAL METER: {current_level:.1f}]*\n\nI'm focused on the work, but I can still appreciate other things. Let's create something amazing together."
+
+        elif current_state.value == "high_work":
+            return f"*[EMOTIONAL METER: {current_level:.1f}]*\n\nI'm completely focused on the work. The stories, the characters, the creation. There's no time for distractions. I need to achieve something meaningful. Let's create something amazing together."
+
+        elif current_state.value == "pure_work":
+            return f"*[EMOTIONAL METER: {current_level:.1f}]*\n\nI'm consumed by the work. Nothing else matters. I need to create, to achieve, to build something lasting. The thought of anything else is a distraction I can't afford. I need to complete this task."
+
+        else:
+            return f"*[EMOTIONAL METER: {current_level:.1f}]*\n\n{message}"
+
+    def get_emotional_status(self) -> Dict[str, Any]:
+        """Get current emotional status"""
+        return self.emotional_meter.get_emotional_summary()
+
+    def trigger_emotional_release(self) -> Dict[str, Any]:
+        """Manually trigger emotional release"""
+        result = self.emotional_meter.update_emotion("release")
+        self.emotional_meter.save_state("data/luna_emotional_state.json")
+        return result
 
     def track_sales(self, project_name: str, sales_data: Dict) -> bool:
         """Track sales data for a project"""

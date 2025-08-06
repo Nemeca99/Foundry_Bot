@@ -9,7 +9,7 @@ import random
 import time
 import math
 from typing import Dict, List, Tuple, Optional
-from emotional_blender import EnhancedEmotionalBlender
+from astra_emotional_fragments.emotional_blender import EnhancedEmotionalBlender
 
 
 class EnhancedDynamicEmotionEngine:
