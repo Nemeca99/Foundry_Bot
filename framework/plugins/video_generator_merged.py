@@ -49,9 +49,16 @@ import logging
 try:
     import cv2
     import numpy as np
-    from moviepy.editor import VideoFileClip, AudioFileClip, CompositeVideoClip, TextClip, ImageClip
+    from moviepy.editor import (
+        VideoFileClip,
+        AudioFileClip,
+        CompositeVideoClip,
+        TextClip,
+        ImageClip,
+    )
     from moviepy.video.fx import resize, crop
     import pygame
+
     ENHANCED_AVAILABLE = True
 except ImportError:
     ENHANCED_AVAILABLE = False
@@ -74,26 +81,26 @@ class VideoGenerator:
         # Enhanced functionality
         self.video_presets = self._initialize_video_presets()
         self.available_models = {}
-        
+
         # API configurations
         self.api_configs = {
             "runway_ml": {
                 "url": "https://api.runwayml.com/v1/inference",
                 "timeout": 120,
-                "enabled": False  # Requires API key
+                "enabled": False,  # Requires API key
             },
             "replicate": {
                 "url": "https://api.replicate.com/v1/predictions",
                 "timeout": 180,
-                "enabled": False  # Requires API key
+                "enabled": False,  # Requires API key
             },
             "stability_ai": {
                 "url": "https://api.stability.ai/v1/generation/stable-video-diffusion",
                 "timeout": 120,
-                "enabled": False  # Requires API key
-            }
+                "enabled": False,  # Requires API key
+            },
         }
-        
+
         # Initialize pygame for video playback if available
         if ENHANCED_AVAILABLE:
             try:
@@ -141,7 +148,7 @@ class VideoGenerator:
                 "fps": 24,
                 "resolution": (1920, 1080),
                 "description": "Romantic and intimate video style",
-                "characteristics": ["soft", "intimate", "beautiful", "warm"]
+                "characteristics": ["soft", "intimate", "beautiful", "warm"],
             },
             "fantasy": {
                 "style": "fantasy, magical, mystical, detailed",
@@ -149,7 +156,7 @@ class VideoGenerator:
                 "fps": 30,
                 "resolution": (1920, 1080),
                 "description": "Fantasy and magical video style",
-                "characteristics": ["magical", "mystical", "detailed", "artistic"]
+                "characteristics": ["magical", "mystical", "detailed", "artistic"],
             },
             "modern": {
                 "style": "modern, contemporary, clean, professional",
@@ -157,7 +164,7 @@ class VideoGenerator:
                 "fps": 24,
                 "resolution": (1920, 1080),
                 "description": "Modern and contemporary video style",
-                "characteristics": ["clean", "professional", "contemporary", "sleek"]
+                "characteristics": ["clean", "professional", "contemporary", "sleek"],
             },
             "vintage": {
                 "style": "vintage, retro, classic, nostalgic",
@@ -165,7 +172,7 @@ class VideoGenerator:
                 "fps": 24,
                 "resolution": (1920, 1080),
                 "description": "Vintage and retro video style",
-                "characteristics": ["vintage", "retro", "classic", "nostalgic"]
+                "characteristics": ["vintage", "retro", "classic", "nostalgic"],
             },
             "anime": {
                 "style": "anime style, colorful, detailed, stylized",
@@ -173,7 +180,7 @@ class VideoGenerator:
                 "fps": 30,
                 "resolution": (1920, 1080),
                 "description": "Anime-style video",
-                "characteristics": ["colorful", "stylized", "detailed", "anime"]
+                "characteristics": ["colorful", "stylized", "detailed", "anime"],
             },
             "realistic": {
                 "style": "photorealistic, detailed, high quality, sharp focus",
@@ -181,7 +188,7 @@ class VideoGenerator:
                 "fps": 24,
                 "resolution": (1920, 1080),
                 "description": "Realistic and detailed video style",
-                "characteristics": ["realistic", "detailed", "sharp", "high_quality"]
+                "characteristics": ["realistic", "detailed", "sharp", "high_quality"],
             },
             "artistic": {
                 "style": "artistic, creative, beautiful, detailed, high quality, masterpiece",
@@ -189,7 +196,7 @@ class VideoGenerator:
                 "fps": 24,
                 "resolution": (1920, 1080),
                 "description": "Artistic and creative video style",
-                "characteristics": ["artistic", "creative", "beautiful", "masterpiece"]
+                "characteristics": ["artistic", "creative", "beautiful", "masterpiece"],
             },
             "default": {
                 "style": "high quality, detailed, beautiful",
@@ -197,8 +204,8 @@ class VideoGenerator:
                 "fps": 24,
                 "resolution": (1920, 1080),
                 "description": "Default video style",
-                "characteristics": ["high_quality", "detailed", "beautiful"]
-            }
+                "characteristics": ["high_quality", "detailed", "beautiful"],
+            },
         }
 
     def generate_video(self, prompt: str, duration: int = 30) -> str:
@@ -212,7 +219,7 @@ class VideoGenerator:
                 result = self.generate_video_from_images([], "default")
                 if result.get("success"):
                     return result["video_path"]
-            
+
             # Fallback to basic generation
             video_path = self._generate_video_placeholder(enhanced_prompt, duration)
             logger.info(f"✅ Generated video: {video_path}")
@@ -231,14 +238,14 @@ class VideoGenerator:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"generated_video_{duration}s_{timestamp}.mp4"
         video_path = self.output_dir / filename
-        
+
         # Create a simple placeholder video file
         # This is a minimal implementation - in practice you'd use a video generation library
-        with open(video_path, 'wb') as f:
+        with open(video_path, "wb") as f:
             # Write a minimal MP4 header (simplified)
-            f.write(b'\x00\x00\x00\x20ftypmp41')
-            f.write(b'\x00' * 1000)  # Placeholder content
-        
+            f.write(b"\x00\x00\x00\x20ftypmp41")
+            f.write(b"\x00" * 1000)  # Placeholder content
+
         return str(video_path)
 
     def generate_book_trailer(
@@ -264,26 +271,26 @@ class VideoGenerator:
 
     # Enhanced functionality methods
     def generate_video_from_images(
-        self, 
-        image_paths: List[str], 
+        self,
+        image_paths: List[str],
         style: str = "default",
-        output_filename: str = None
+        output_filename: str = None,
     ) -> Dict:
         """Generate video from a sequence of images using MoviePy"""
         if not ENHANCED_AVAILABLE:
             return {"success": False, "error": "MoviePy not available"}
-        
+
         try:
             # Get video preset
             preset = self.video_presets.get(style, self.video_presets["default"])
-            
+
             # Generate filename
             if not output_filename:
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                 output_filename = f"moviepy_{style}_{timestamp}.mp4"
-            
+
             video_path = self.output_dir / output_filename
-            
+
             if not image_paths:
                 # Create a simple color video if no images provided
                 color_clip = ColorClip(size=preset["resolution"], color=(100, 150, 200))
@@ -294,33 +301,32 @@ class VideoGenerator:
                 clips = []
                 for img_path in image_paths:
                     if os.path.exists(img_path):
-                        clip = ImageClip(img_path).set_duration(preset["duration"] / len(image_paths))
+                        clip = ImageClip(img_path).set_duration(
+                            preset["duration"] / len(image_paths)
+                        )
                         clip = clip.resize(preset["resolution"])
                         clips.append(clip)
-                
+
                 if clips:
                     final_clip = CompositeVideoClip(clips)
                     final_clip.write_videofile(str(video_path), fps=preset["fps"])
                 else:
                     return {"success": False, "error": "No valid images provided"}
-            
+
             return {
                 "success": True,
                 "video_path": str(video_path),
                 "style": style,
                 "preset": preset,
-                "duration": preset["duration"]
+                "duration": preset["duration"],
             }
-            
+
         except Exception as e:
             logger.error(f"❌ MoviePy video generation failed: {e}")
             return {"success": False, "error": str(e)}
 
     def generate_video_with_api(
-        self, 
-        prompt: str, 
-        style: str = "default",
-        api_type: str = "runway_ml"
+        self, prompt: str, style: str = "default", api_type: str = "runway_ml"
     ) -> Dict:
         """Generate video using API"""
         if api_type == "runway_ml":
@@ -348,80 +354,74 @@ class VideoGenerator:
         return {"success": False, "error": "Stability AI API not configured"}
 
     def create_character_video(
-        self, 
+        self,
         character_name: str,
         character_description: str,
         style: str = "romantic",
-        duration: int = 10
+        duration: int = 10,
     ) -> Dict:
         """Create character video with enhanced capabilities"""
         prompt = f"Character video of {character_name}: {character_description}"
         return self.generate_video_with_api(prompt, style, "runway_ml")
 
     def create_story_scene_video(
-        self, 
-        scene_description: str,
-        style: str = "realistic",
-        duration: int = 15
+        self, scene_description: str, style: str = "realistic", duration: int = 15
     ) -> Dict:
         """Create story scene video with enhanced capabilities"""
         prompt = f"Story scene video: {scene_description}"
         return self.generate_video_with_api(prompt, style, "runway_ml")
 
     def create_video_with_audio(
-        self, 
-        video_path: str, 
-        audio_path: str,
-        output_filename: str = None
+        self, video_path: str, audio_path: str, output_filename: str = None
     ) -> Dict:
         """Combine video with audio using MoviePy"""
         if not ENHANCED_AVAILABLE:
             return {"success": False, "error": "MoviePy not available"}
-        
+
         try:
             # Load video and audio
             video_clip = VideoFileClip(video_path)
             audio_clip = AudioFileClip(audio_path)
-            
+
             # Combine video and audio
             final_clip = video_clip.set_audio(audio_clip)
-            
+
             # Generate output filename
             if not output_filename:
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                 output_filename = f"video_with_audio_{timestamp}.mp4"
-            
+
             output_path = self.output_dir / output_filename
-            
+
             # Write final video
             final_clip.write_videofile(str(output_path))
-            
+
             # Clean up
             video_clip.close()
             audio_clip.close()
             final_clip.close()
-            
+
             return {
                 "success": True,
                 "video_path": str(output_path),
                 "original_video": video_path,
-                "original_audio": audio_path
+                "original_audio": audio_path,
             }
-            
+
         except Exception as e:
             logger.error(f"❌ Video-audio combination failed: {e}")
             return {"success": False, "error": str(e)}
 
     def create_video_collage(
-        self, 
-        video_paths: List[str], 
+        self,
+        video_paths: List[str],
         layout: str = "grid",
-        output_filename: str = "video_collage.mp4"
+        output_filename: str = "video_collage.mp4",
     ) -> Dict:
         """Create video collage using MoviePy"""
         if not ENHANCED_AVAILABLE:
             return {"success": False, "error": "MoviePy not available"}
-        
+
         try:
             # Load video clips
             clips = []
@@ -429,10 +429,10 @@ class VideoGenerator:
                 if os.path.exists(video_path):
                     clip = VideoFileClip(video_path)
                     clips.append(clip)
-            
+
             if not clips:
                 return {"success": False, "error": "No valid videos provided"}
-            
+
             # Create collage based on layout
             if layout == "grid":
                 # Simple grid layout
@@ -444,22 +444,22 @@ class VideoGenerator:
                 final_clip = clips[0]
                 for clip in clips[1:]:
                     final_clip = CompositeVideoClip([final_clip, clip])
-            
+
             output_path = self.output_dir / output_filename
             final_clip.write_videofile(str(output_path))
-            
+
             # Clean up
             for clip in clips:
                 clip.close()
             final_clip.close()
-            
+
             return {
                 "success": True,
                 "video_path": str(output_path),
                 "layout": layout,
-                "input_videos": video_paths
+                "input_videos": video_paths,
             }
-            
+
         except Exception as e:
             logger.error(f"❌ Video collage creation failed: {e}")
             return {"success": False, "error": str(e)}
@@ -468,7 +468,7 @@ class VideoGenerator:
         """Play video file using pygame"""
         if not ENHANCED_AVAILABLE:
             return False
-        
+
         try:
             pygame.mixer.music.load(filepath)
             pygame.mixer.music.play()
@@ -483,7 +483,7 @@ class VideoGenerator:
             "book_trailer": list(self.video_styles["book_trailer"].keys()),
             "promotional": list(self.video_styles["promotional"].keys()),
             "scene_video": list(self.video_styles["scene_video"].keys()),
-            "enhanced_presets": list(self.video_presets.keys())
+            "enhanced_presets": list(self.video_presets.keys()),
         }
 
     def get_engine_status(self) -> Dict:
@@ -495,7 +495,7 @@ class VideoGenerator:
             "pygame_available": ENHANCED_AVAILABLE,
             "runway_ml_api": self.api_configs["runway_ml"]["enabled"],
             "replicate_api": self.api_configs["replicate"]["enabled"],
-            "stability_ai_api": self.api_configs["stability_ai"]["enabled"]
+            "stability_ai_api": self.api_configs["stability_ai"]["enabled"],
         }
 
     def test_api_connection(self, api_type: str = "runway_ml") -> Dict:
@@ -505,4 +505,4 @@ class VideoGenerator:
 
 def initialize(framework) -> VideoGenerator:
     """Initialize the merged video generator plugin"""
-    return VideoGenerator(framework) 
+    return VideoGenerator(framework)

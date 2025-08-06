@@ -58,6 +58,18 @@ from framework.plugins.multi_language_optimizer import (
     MultiLanguageOptimizer,
     multi_language_optimizer,
 )
+from framework.plugins.multi_personality_system import (
+    MultiPersonalitySystem,
+    multi_personality_system,
+)
+from framework.plugins.personality_fusion_system import (
+    PersonalityFusionSystem,
+    personality_fusion_system,
+)
+from framework.plugins.dynamic_personality_creator import (
+    DynamicPersonalityCreator,
+    dynamic_personality_creator,
+)
 
 # Add project root to path
 project_root = Path(__file__).parent.parent
@@ -131,6 +143,9 @@ class FrameworkCore:
         self.ai_backend = ai_backend
         self.self_learning_system = self_learning_system
         self.multi_language_optimizer = multi_language_optimizer
+        self.multi_personality_system = multi_personality_system
+        self.personality_fusion_system = personality_fusion_system
+        self.dynamic_personality_creator = dynamic_personality_creator
 
         # Initialize enhanced emotional system
         self.emotional_meter = EnhancedEmotionalMeter()
@@ -483,6 +498,98 @@ class FrameworkCore:
     def get_optimization_stats(self) -> Dict[str, Any]:
         """Get multi-language optimization statistics"""
         return self.multi_language_optimizer.get_optimization_stats()
+    
+    def activate_personalities(self, personality_names: List[str]):
+        """Activate specific personalities for conversation"""
+        self.multi_personality_system.activate_personalities(personality_names)
+    
+    def start_internal_dialogue(self, topic: str, participants: List[str] = None) -> List[Dict]:
+        """Start a conversation between different personalities"""
+        return self.multi_personality_system.start_internal_dialogue(topic, participants)
+    
+    def create_personality_collaboration(self, topic: str, collaboration_type: str) -> List[Dict]:
+        """Create a specific type of collaboration between personalities"""
+        return self.multi_personality_system.create_personality_collaboration(topic, collaboration_type)
+    
+    def get_personality_insights(self, personality_name: str) -> Dict[str, Any]:
+        """Get insights about a specific personality"""
+        return self.multi_personality_system.get_personality_insights(personality_name)
+    
+    def learn_from_internal_dialogue(self, conversation: List[Dict]):
+        """All personalities learn from the internal conversation"""
+        self.multi_personality_system.learn_from_internal_dialogue(conversation)
+    
+    def get_personality_stats(self) -> Dict[str, Any]:
+        """Get multi-personality system statistics"""
+        return self.multi_personality_system.get_system_stats()
+    
+    def get_all_personalities(self) -> List[str]:
+        """Get list of all available personalities"""
+        return list(self.multi_personality_system.personalities.keys())
+    
+    def get_active_personalities(self) -> List[str]:
+        """Get list of currently active personalities"""
+        return [p.name for p in self.multi_personality_system.active_personalities]
+    
+    # Personality Fusion Methods
+    def create_personality_fusion(self, fusion_type: str) -> Dict[str, Any]:
+        """Create a fused personality"""
+        from framework.plugins.personality_fusion_system import FusionType
+        fusion_enum = FusionType(fusion_type)
+        fused_personality = self.personality_fusion_system.create_fusion(fusion_enum)
+        return {
+            "name": fused_personality.name,
+            "fusion_type": fused_personality.fusion_type.value,
+            "base_personalities": fused_personality.base_personalities,
+            "fusion_bonus": fused_personality.fusion_bonus
+        }
+    
+    def get_fusion_response(self, fusion_type: str, topic: str) -> str:
+        """Get a response from a fused personality"""
+        from framework.plugins.personality_fusion_system import FusionType
+        fusion_enum = FusionType(fusion_type)
+        return self.personality_fusion_system.get_fusion_response(fusion_enum, topic)
+    
+    def get_fusion_insights(self, fusion_type: str) -> Dict[str, Any]:
+        """Get insights about a fused personality"""
+        from framework.plugins.personality_fusion_system import FusionType
+        fusion_enum = FusionType(fusion_type)
+        return self.personality_fusion_system.get_fusion_insights(fusion_enum)
+    
+    def get_available_fusions(self) -> List[str]:
+        """Get list of available fusion types"""
+        return [fusion.value for fusion in self.personality_fusion_system.get_available_fusions()]
+    
+    def get_fusion_stats(self) -> Dict[str, Any]:
+        """Get personality fusion system statistics"""
+        return self.personality_fusion_system.get_fusion_stats()
+    
+    # Dynamic Personality Creator Methods
+    def create_dynamic_personality(self, context: str, requirements: Dict[str, Any]) -> Dict[str, Any]:
+        """Create a dynamic personality for specific context and requirements"""
+        dynamic_personality = self.dynamic_personality_creator.create_personality_for_context(context, requirements)
+        return {
+            "name": dynamic_personality.name,
+            "personality_id": dynamic_personality.personality_id,
+            "context": dynamic_personality.context,
+            "special_ability": dynamic_personality.special_ability
+        }
+    
+    def get_dynamic_personality_response(self, personality_id: str, topic: str) -> str:
+        """Get a response from a dynamic personality"""
+        return self.dynamic_personality_creator.get_dynamic_personality_response(personality_id, topic)
+    
+    def get_dynamic_personality_insights(self, personality_id: str) -> Dict[str, Any]:
+        """Get insights about a dynamic personality"""
+        return self.dynamic_personality_creator.get_dynamic_personality_insights(personality_id)
+    
+    def get_all_dynamic_personalities(self) -> List[str]:
+        """Get list of all dynamic personality IDs"""
+        return self.dynamic_personality_creator.get_all_dynamic_personalities()
+    
+    def get_dynamic_personality_stats(self) -> Dict[str, Any]:
+        """Get dynamic personality system statistics"""
+        return self.dynamic_personality_creator.get_dynamic_personality_stats()
 
     def track_sales(self, project_name: str, sales_data: Dict) -> bool:
         """Track sales data for a project"""
