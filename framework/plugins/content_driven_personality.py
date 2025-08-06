@@ -561,6 +561,6 @@ class ContentDrivenPersonality:
         return "\n".join(response_parts)
 
 
-def initialize():
+def initialize(framework=None):
     """Initialize the Content-Driven Personality Engine"""
     return ContentDrivenPersonality()

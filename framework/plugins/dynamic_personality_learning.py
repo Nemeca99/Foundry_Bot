@@ -600,6 +600,6 @@ class DynamicPersonalityLearning:
         logger.info("Learning data reset")
 
 
-def initialize():
+def initialize(framework=None):
     """Initialize the Dynamic Personality Learning System"""
     return DynamicPersonalityLearning()

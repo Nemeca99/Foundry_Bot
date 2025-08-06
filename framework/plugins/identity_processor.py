@@ -49,13 +49,13 @@ class IdentityProfile:
 class IdentityProcessor:
     """Processor that transforms content from 'knowing about' to 'I AM' identity"""
 
-    def __init__(self, framework):
+    def __init__(self, framework=None):
         self.framework = framework
-        self.config = framework.config
-
-        # Paths
         from core.config import Config
 
+        self.config = Config()
+
+        # Paths
         self.identity_dir = Config.MODELS_DIR / "identity_processing"
         self.identity_dir.mkdir(parents=True, exist_ok=True)
 
@@ -614,6 +614,6 @@ class IdentityProcessor:
         }
 
 
-def initialize(framework):
+def initialize(framework=None):
     """Initialize the Identity Processor plugin"""
     return IdentityProcessor(framework)

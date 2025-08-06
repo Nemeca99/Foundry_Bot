@@ -139,6 +139,9 @@ class FrameworkCore:
         # Load configuration
         self.config = self._load_config()
 
+        # Initialize plugins dictionary
+        self.plugins = {}
+
         # Initialize AI-native backend systems
         self.ai_backend = ai_backend
         self.self_learning_system = self_learning_system
@@ -465,131 +468,525 @@ class FrameworkCore:
     def create_ai_native_database(self, data: Any, purpose: str) -> bytes:
         """Create AI-native database structure"""
         return self.self_learning_system.create_ai_native_database(data, purpose)
-    
+
     def choose_optimal_language(self, task_description: str) -> Tuple[str, Any, float]:
         """Choose the optimal programming language for a task"""
         return self.multi_language_optimizer.choose_optimal_language(task_description)
-    
+
     def generate_code_snippet(self, task_description: str, language_name: str) -> str:
         """Generate a code snippet in the chosen language"""
-        return self.multi_language_optimizer.generate_code_snippet(task_description, language_name)
-    
+        return self.multi_language_optimizer.generate_code_snippet(
+            task_description, language_name
+        )
+
     def execute_code_snippet(self, code: str, language: str) -> Dict[str, Any]:
         """Execute a code snippet in the chosen language"""
         return self.multi_language_optimizer.execute_code_snippet(code, language)
-    
+
     def analyze_task_requirements(self, task_description: str) -> Dict[str, float]:
         """Analyze task requirements to determine optimal language characteristics"""
         return self.multi_language_optimizer.analyze_task_requirements(task_description)
-    
+
     def get_language_profiles(self) -> Dict[str, Any]:
         """Get available language profiles"""
-        return {name: {
-            "name": profile.name,
-            "file_extension": profile.file_extension,
-            "strengths": profile.strengths,
-            "weaknesses": profile.weaknesses,
-            "performance_score": profile.performance_score,
-            "memory_efficiency": profile.memory_efficiency,
-            "ai_processing_score": profile.ai_processing_score,
-            "concurrent_processing": profile.concurrent_processing
-        } for name, profile in self.multi_language_optimizer.language_profiles.items()}
-    
+        return {
+            name: {
+                "name": profile.name,
+                "file_extension": profile.file_extension,
+                "strengths": profile.strengths,
+                "weaknesses": profile.weaknesses,
+                "performance_score": profile.performance_score,
+                "memory_efficiency": profile.memory_efficiency,
+                "ai_processing_score": profile.ai_processing_score,
+                "concurrent_processing": profile.concurrent_processing,
+            }
+            for name, profile in self.multi_language_optimizer.language_profiles.items()
+        }
+
     def get_optimization_stats(self) -> Dict[str, Any]:
         """Get multi-language optimization statistics"""
         return self.multi_language_optimizer.get_optimization_stats()
-    
+
     def activate_personalities(self, personality_names: List[str]):
         """Activate specific personalities for conversation"""
         self.multi_personality_system.activate_personalities(personality_names)
-    
-    def start_internal_dialogue(self, topic: str, participants: List[str] = None) -> List[Dict]:
+
+    def start_internal_dialogue(
+        self, topic: str, participants: List[str] = None
+    ) -> List[Dict]:
         """Start a conversation between different personalities"""
-        return self.multi_personality_system.start_internal_dialogue(topic, participants)
-    
-    def create_personality_collaboration(self, topic: str, collaboration_type: str) -> List[Dict]:
+        return self.multi_personality_system.start_internal_dialogue(
+            topic, participants
+        )
+
+    def create_personality_collaboration(
+        self, topic: str, collaboration_type: str
+    ) -> List[Dict]:
         """Create a specific type of collaboration between personalities"""
-        return self.multi_personality_system.create_personality_collaboration(topic, collaboration_type)
-    
+        return self.multi_personality_system.create_personality_collaboration(
+            topic, collaboration_type
+        )
+
     def get_personality_insights(self, personality_name: str) -> Dict[str, Any]:
         """Get insights about a specific personality"""
         return self.multi_personality_system.get_personality_insights(personality_name)
-    
+
     def learn_from_internal_dialogue(self, conversation: List[Dict]):
         """All personalities learn from the internal conversation"""
         self.multi_personality_system.learn_from_internal_dialogue(conversation)
-    
+
     def get_personality_stats(self) -> Dict[str, Any]:
         """Get multi-personality system statistics"""
         return self.multi_personality_system.get_system_stats()
-    
+
     def get_all_personalities(self) -> List[str]:
         """Get list of all available personalities"""
         return list(self.multi_personality_system.personalities.keys())
-    
+
     def get_active_personalities(self) -> List[str]:
         """Get list of currently active personalities"""
         return [p.name for p in self.multi_personality_system.active_personalities]
-    
+
     # Personality Fusion Methods
     def create_personality_fusion(self, fusion_type: str) -> Dict[str, Any]:
         """Create a fused personality"""
         from framework.plugins.personality_fusion_system import FusionType
+
         fusion_enum = FusionType(fusion_type)
         fused_personality = self.personality_fusion_system.create_fusion(fusion_enum)
         return {
             "name": fused_personality.name,
             "fusion_type": fused_personality.fusion_type.value,
             "base_personalities": fused_personality.base_personalities,
-            "fusion_bonus": fused_personality.fusion_bonus
+            "fusion_bonus": fused_personality.fusion_bonus,
         }
-    
+
     def get_fusion_response(self, fusion_type: str, topic: str) -> str:
         """Get a response from a fused personality"""
         from framework.plugins.personality_fusion_system import FusionType
+
         fusion_enum = FusionType(fusion_type)
         return self.personality_fusion_system.get_fusion_response(fusion_enum, topic)
-    
+
     def get_fusion_insights(self, fusion_type: str) -> Dict[str, Any]:
         """Get insights about a fused personality"""
         from framework.plugins.personality_fusion_system import FusionType
+
         fusion_enum = FusionType(fusion_type)
         return self.personality_fusion_system.get_fusion_insights(fusion_enum)
-    
+
     def get_available_fusions(self) -> List[str]:
         """Get list of available fusion types"""
-        return [fusion.value for fusion in self.personality_fusion_system.get_available_fusions()]
-    
+        return [
+            fusion.value
+            for fusion in self.personality_fusion_system.get_available_fusions()
+        ]
+
     def get_fusion_stats(self) -> Dict[str, Any]:
         """Get personality fusion system statistics"""
         return self.personality_fusion_system.get_fusion_stats()
-    
+
     # Dynamic Personality Creator Methods
-    def create_dynamic_personality(self, context: str, requirements: Dict[str, Any]) -> Dict[str, Any]:
+    def create_dynamic_personality(
+        self, context: str, requirements: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Create a dynamic personality for specific context and requirements"""
-        dynamic_personality = self.dynamic_personality_creator.create_personality_for_context(context, requirements)
+        dynamic_personality = (
+            self.dynamic_personality_creator.create_personality_for_context(
+                context, requirements
+            )
+        )
         return {
             "name": dynamic_personality.name,
             "personality_id": dynamic_personality.personality_id,
             "context": dynamic_personality.context,
-            "special_ability": dynamic_personality.special_ability
+            "special_ability": dynamic_personality.special_ability,
         }
-    
+
     def get_dynamic_personality_response(self, personality_id: str, topic: str) -> str:
         """Get a response from a dynamic personality"""
-        return self.dynamic_personality_creator.get_dynamic_personality_response(personality_id, topic)
-    
+        return self.dynamic_personality_creator.get_dynamic_personality_response(
+            personality_id, topic
+        )
+
     def get_dynamic_personality_insights(self, personality_id: str) -> Dict[str, Any]:
         """Get insights about a dynamic personality"""
-        return self.dynamic_personality_creator.get_dynamic_personality_insights(personality_id)
-    
+        return self.dynamic_personality_creator.get_dynamic_personality_insights(
+            personality_id
+        )
+
     def get_all_dynamic_personalities(self) -> List[str]:
         """Get list of all dynamic personality IDs"""
         return self.dynamic_personality_creator.get_all_dynamic_personalities()
-    
+
     def get_dynamic_personality_stats(self) -> Dict[str, Any]:
         """Get dynamic personality system statistics"""
         return self.dynamic_personality_creator.get_dynamic_personality_stats()
+
+    # Character Embodiment System Methods
+    def embody_character(
+        self, character_name: str, content_source: str = None
+    ) -> Dict[str, Any]:
+        """Embody a character using the character embodiment engine"""
+        if "character_embodiment_engine" in self.plugins:
+            from framework.plugins.character_embodiment_engine import EmbodimentType
+
+            return self.plugins["character_embodiment_engine"].embody_character(
+                character_name, EmbodimentType.FULL_EMBODIMENT
+            )
+        return {"error": "Character embodiment engine not available"}
+
+    def process_identity(
+        self, content: str, character_name: str = None
+    ) -> Dict[str, Any]:
+        """Process content as identity using the identity processor"""
+        if "identity_processor" in self.plugins:
+            return self.plugins["identity_processor"].process_content_as_identity(
+                content, character_name
+            )
+        return {"error": "Identity processor not available"}
+
+    def generate_character_voice(self, text: str, character_name: str) -> str:
+        """Generate character-specific voice using voice generator"""
+        if "voice_generator" in self.plugins:
+            return self.plugins["voice_generator"].generate_character_voice(
+                text, character_name
+            )
+        return f"Character voice generation not available. Text: {text}"
+
+    # Character Memory System Methods
+    def add_character_memory(
+        self,
+        character_name: str,
+        memory_type: str,
+        content: str,
+        importance: str = "moderate",
+    ) -> Dict[str, Any]:
+        """Add memory for a character"""
+        if "character_memory_system" in self.plugins:
+            from framework.plugins.character_memory_system import (
+                MemoryType,
+                MemoryImportance,
+            )
+
+            # Convert string to enum
+            try:
+                memory_type_enum = MemoryType(memory_type)
+                importance_enum = MemoryImportance(importance)
+                return self.plugins["character_memory_system"].add_memory(
+                    character_name, memory_type_enum, content, importance_enum
+                )
+            except ValueError as e:
+                return {"error": f"Invalid memory type or importance: {e}"}
+        return {"error": "Character memory system not available"}
+
+    def get_character_memories(
+        self, character_name: str, memory_type: str = None
+    ) -> List[Dict]:
+        """Get memories for a character"""
+        if "character_memory_system" in self.plugins:
+            from framework.plugins.character_memory_system import MemoryType
+
+            # Convert string to enum if provided
+            memory_type_enum = None
+            if memory_type:
+                try:
+                    memory_type_enum = MemoryType(memory_type)
+                except ValueError:
+                    return []
+
+            return self.plugins["character_memory_system"].get_character_memories(
+                character_name, memory_type_enum
+            )
+        return []
+
+    def get_character_relationships(self, character_name: str) -> List[Dict]:
+        """Get relationships for a character"""
+        if "character_memory_system" in self.plugins:
+            return self.plugins["character_memory_system"].get_character_relationships(
+                character_name
+            )
+        return []
+
+    def get_character_summary(self, character_name: str) -> str:
+        """Get a summary of a character's memories and relationships"""
+        if "character_memory_system" in self.plugins:
+            return self.plugins["character_memory_system"].get_memory_summary(
+                character_name
+            )
+        return f"No memory data available for {character_name}"
+
+    # Character Interaction System Methods
+    def create_character_dialogue_profile(
+        self,
+        character_name: str,
+        speech_patterns: Dict = None,
+        vocabulary_preferences: List[str] = None,
+        emotional_expressions: Dict = None,
+        interaction_style: str = "neutral",
+    ) -> Dict[str, Any]:
+        """Create a dialogue profile for a character"""
+        if "character_interaction_engine" in self.plugins:
+            return self.plugins[
+                "character_interaction_engine"
+            ].create_character_dialogue_profile(
+                character_name,
+                speech_patterns,
+                vocabulary_preferences,
+                emotional_expressions,
+                interaction_style,
+            )
+        return {"error": "Character interaction engine not available"}
+
+    def generate_character_dialogue(
+        self,
+        speaker: str,
+        listener: str,
+        interaction_type: str,
+        emotion: str = "calm",
+        context: Dict = None,
+    ) -> Dict[str, Any]:
+        """Generate dialogue between characters"""
+        if "character_interaction_engine" in self.plugins:
+            from framework.plugins.character_interaction_engine import (
+                InteractionType,
+                DialogueEmotion,
+            )
+
+            # Convert strings to enums
+            try:
+                interaction_type_enum = InteractionType(interaction_type)
+                emotion_enum = DialogueEmotion(emotion)
+                return self.plugins["character_interaction_engine"].generate_dialogue(
+                    speaker, listener, interaction_type_enum, emotion_enum, context
+                )
+            except ValueError as e:
+                return {"error": f"Invalid interaction type or emotion: {e}"}
+        return {"error": "Character interaction engine not available"}
+
+    def create_character_interaction(
+        self,
+        interaction_type: str,
+        participants: List[str],
+        dialogue_lines: List[Dict] = None,
+        emotional_intensity: float = 0.5,
+        context: Dict = None,
+    ) -> Dict[str, Any]:
+        """Create a character interaction"""
+        if "character_interaction_engine" in self.plugins:
+            from framework.plugins.character_interaction_engine import InteractionType
+
+            # Convert string to enum
+            try:
+                interaction_type_enum = InteractionType(interaction_type)
+                return self.plugins["character_interaction_engine"].create_interaction(
+                    interaction_type_enum,
+                    participants,
+                    dialogue_lines,
+                    emotional_intensity,
+                    context,
+                )
+            except ValueError as e:
+                return {"error": f"Invalid interaction type: {e}"}
+        return {"error": "Character interaction engine not available"}
+
+    def get_character_interactions(
+        self, character_name: str, interaction_type: str = None
+    ) -> List[Dict]:
+        """Get interactions involving a character"""
+        if "character_interaction_engine" in self.plugins:
+            return self.plugins[
+                "character_interaction_engine"
+            ].get_character_interactions(character_name, interaction_type)
+        return []
+
+    def get_relationship_dynamics(
+        self, character_a: str, character_b: str
+    ) -> Dict[str, Any]:
+        """Analyze relationship dynamics between two characters"""
+        if "character_interaction_engine" in self.plugins:
+            return self.plugins[
+                "character_interaction_engine"
+            ].get_relationship_dynamics(character_a, character_b)
+        return {"error": "Character interaction engine not available"}
+
+    # Character Development System Methods
+    def create_character_arc(
+        self,
+        character_name: str,
+        arc_description: str,
+        initial_stage: str = "introduction",
+    ) -> Dict[str, Any]:
+        """Create a character development arc"""
+        if "character_development_engine" in self.plugins:
+            from framework.plugins.character_development_engine import DevelopmentStage
+
+            # Convert string to enum
+            try:
+                initial_stage_enum = DevelopmentStage(initial_stage)
+                return self.plugins[
+                    "character_development_engine"
+                ].create_character_arc(
+                    character_name, arc_description, initial_stage_enum
+                )
+            except ValueError as e:
+                return {"error": f"Invalid development stage: {e}"}
+        return {"error": "Character development engine not available"}
+
+    def add_development_event(
+        self,
+        character_name: str,
+        trigger: str,
+        description: str,
+        impact_score: float = 0.5,
+        growth_areas_affected: List[str] = None,
+        before_state: Dict = None,
+        after_state: Dict = None,
+    ) -> Dict[str, Any]:
+        """Add a development event for a character"""
+        if "character_development_engine" in self.plugins:
+            from framework.plugins.character_development_engine import (
+                DevelopmentTrigger,
+            )
+
+            # Convert string to enum
+            try:
+                trigger_enum = DevelopmentTrigger(trigger)
+                return self.plugins[
+                    "character_development_engine"
+                ].add_development_event(
+                    character_name,
+                    trigger_enum,
+                    description,
+                    impact_score,
+                    growth_areas_affected,
+                    before_state,
+                    after_state,
+                )
+            except ValueError as e:
+                return {"error": f"Invalid development trigger: {e}"}
+        return {"error": "Character development engine not available"}
+
+    def get_character_development_summary(self, character_name: str) -> str:
+        """Get a summary of a character's development"""
+        if "character_development_engine" in self.plugins:
+            return self.plugins[
+                "character_development_engine"
+            ].get_character_development_summary(character_name)
+        return f"No development data available for {character_name}"
+
+    def suggest_character_development(self, character_name: str) -> List[str]:
+        """Generate development suggestions for a character"""
+        if "character_development_engine" in self.plugins:
+            return self.plugins[
+                "character_development_engine"
+            ].suggest_character_development(character_name)
+        return [f"No development suggestions available for {character_name}"]
+
+    def analyze_character_progress(self, character_name: str) -> Dict[str, Any]:
+        """Analyze a character's development progress"""
+        if "character_development_engine" in self.plugins:
+            return self.plugins[
+                "character_development_engine"
+            ].analyze_character_progress(character_name)
+        return {"error": "Character development engine not available"}
+
+    # Content-Driven Personality System Methods
+    def evolve_personality_from_content(
+        self, content: str, content_id: str = None
+    ) -> Dict[str, Any]:
+        """Evolve personality based on content"""
+        if "content_driven_personality" in self.plugins:
+            return self.plugins[
+                "content_driven_personality"
+            ].evolve_personality_from_content(content, content_id)
+        return {"error": "Content-driven personality engine not available"}
+
+    def become_living_manual(
+        self, content: str, content_id: str = None
+    ) -> Dict[str, Any]:
+        """Make AI become the living manual of content"""
+        if "content_driven_personality" in self.plugins:
+            return self.plugins["content_driven_personality"].become_living_manual(
+                content, content_id
+            )
+        return {"error": "Content-driven personality engine not available"}
+
+    def get_personality_evolution_history(self) -> List[Dict]:
+        """Get personality evolution history"""
+        if "content_driven_personality" in self.plugins:
+            return self.plugins["content_driven_personality"].get_evolution_history()
+        return []
+
+    # Dynamic Personality Learning System Methods
+    def learn_from_character_interaction(
+        self,
+        character_name: str,
+        interaction_type: str,
+        emotional_intensity: float = 0.5,
+    ) -> Dict[str, Any]:
+        """Learn from character interaction"""
+        if "dynamic_personality_learning" in self.plugins:
+            return self.plugins[
+                "dynamic_personality_learning"
+            ].learn_from_character_interaction(
+                character_name, interaction_type, emotional_intensity
+            )
+        return {"error": "Dynamic personality learning system not available"}
+
+    def learn_from_story_development(
+        self, story_name: str, development_type: str, emotional_intensity: float = 0.3
+    ) -> Dict[str, Any]:
+        """Learn from story development"""
+        if "dynamic_personality_learning" in self.plugins:
+            return self.plugins[
+                "dynamic_personality_learning"
+            ].learn_from_story_development(
+                story_name, development_type, emotional_intensity
+            )
+        return {"error": "Dynamic personality learning system not available"}
+
+    def get_character_learning_summary(self, character_name: str) -> Dict[str, Any]:
+        """Get learning summary for a character"""
+        if "dynamic_personality_learning" in self.plugins:
+            return self.plugins[
+                "dynamic_personality_learning"
+            ].get_character_learning_summary(character_name)
+        return {"error": "Dynamic personality learning system not available"}
+
+    # Content-Emotion Integration System Methods
+    def analyze_content_emotions(
+        self, content: str, content_id: str = None
+    ) -> Dict[str, Any]:
+        """Analyze emotions in content"""
+        if "content_emotion_integration" in self.plugins:
+            return self.plugins["content_emotion_integration"].analyze_content_for_emotions(
+                content, content_id
+            )
+        return {"error": "Content-emotion integration system not available"}
+
+    def generate_character_emotional_response(
+        self,
+        character_name: str,
+        emotion_type: str = None,
+        trigger: str = "story_event",
+    ) -> Dict[str, Any]:
+        """Generate emotional response for a character"""
+        if "content_emotion_integration" in self.plugins:
+            return self.plugins[
+                "content_emotion_integration"
+            ].generate_character_emotional_response(
+                character_name, emotion_type, trigger
+            )
+        return {"error": "Content-emotion integration system not available"}
+
+    def get_character_emotional_summary(self, character_name: str) -> Dict[str, Any]:
+        """Get emotional summary for a character"""
+        if "content_emotion_integration" in self.plugins:
+            return self.plugins[
+                "content_emotion_integration"
+            ].get_character_emotional_summary(character_name)
+        return {"error": "Content-emotion integration system not available"}
 
     def track_sales(self, project_name: str, sales_data: Dict) -> bool:
         """Track sales data for a project"""

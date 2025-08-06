@@ -48,13 +48,13 @@ class CharacterProfile:
 class CharacterEmbodimentEngine:
     """Engine that transforms AI from knowing about characters to BEING characters"""
 
-    def __init__(self, framework):
+    def __init__(self, framework=None):
         self.framework = framework
-        self.config = framework.config
-
-        # Paths
         from core.config import Config
 
+        self.config = Config()
+
+        # Paths
         self.book_collection_path = Config.BOOK_COLLECTION_PATH
         self.embodiment_dir = Config.MODELS_DIR / "character_embodiment"
         self.embodiment_dir.mkdir(parents=True, exist_ok=True)
@@ -603,6 +603,6 @@ Respond as Luna with {profile.name}'s influence:
         }
 
 
-def initialize(framework):
+def initialize(framework=None):
     """Initialize the Character Embodiment Engine plugin"""
     return CharacterEmbodimentEngine(framework)
