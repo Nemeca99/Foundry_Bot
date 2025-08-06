@@ -39,7 +39,7 @@ import asyncio
 import json
 import logging
 from pathlib import Path
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Tuple
 from datetime import datetime
 from dataclasses import dataclass, field
 import time
@@ -50,7 +50,14 @@ from dotenv import load_dotenv
 
 # Add imports for AI-native backend systems
 from framework.plugins.ai_native_backend import AINativeBackend, ai_backend
-from framework.plugins.self_learning_system import SelfLearningSystem, self_learning_system
+from framework.plugins.self_learning_system import (
+    SelfLearningSystem,
+    self_learning_system,
+)
+from framework.plugins.multi_language_optimizer import (
+    MultiLanguageOptimizer,
+    multi_language_optimizer,
+)
 
 # Add project root to path
 project_root = Path(__file__).parent.parent
@@ -116,32 +123,33 @@ class FrameworkCore:
     def __init__(self):
         """Initialize the framework core with all components"""
         logger.info("Initializing Framework Core...")
-        
+
         # Load configuration
         self.config = self._load_config()
-        
+
         # Initialize AI-native backend systems
         self.ai_backend = ai_backend
         self.self_learning_system = self_learning_system
-        
+        self.multi_language_optimizer = multi_language_optimizer
+
         # Initialize enhanced emotional system
         self.emotional_meter = EnhancedEmotionalMeter()
         self.emotional_blender = EnhancedEmotionalBlender()
         self.dynamic_engine = EnhancedDynamicEmotionEngine()
-        
+
         # Load emotional state
         self.emotional_meter.load_state("data/luna_emotional_state.json")
-        
+
         # Initialize plugins
         self._initialize_plugins()
-        
+
         # Initialize data structures
         self.projects: Dict[str, AuthoringProject] = {}
         self.stats = AuthoringStats()
-        
+
         # Load existing data
         self.load_data()
-        
+
         logger.info("Framework Core initialized successfully")
 
     def _load_config(self) -> Dict[str, Any]:
@@ -289,37 +297,45 @@ class FrameworkCore:
     def analyze_emotional_triggers(self, message: str) -> list:
         """Analyze message for emotional triggers using global weights"""
         message_lower = message.lower()
-        
+
         # Calculate lust and work averages
         lust_avg = self.emotional_meter._calculate_lust_average(message)
         work_avg = self.emotional_meter._calculate_work_average(message)
         weight_diff = self.emotional_meter._calculate_weight_difference(message)
-        
+
         triggers = []
-        
+
         # Add lust trigger if lust words found
         if lust_avg > 0:
             triggers.append(("lustful", lust_avg))
-        
+
         # Add work trigger if work words found
         if work_avg > 0:
             triggers.append(("work", work_avg))
-        
+
         # Add release trigger if release words found
-        release_words = ["release", "orgasm", "finish", "complete", "done", "climax", "come"]
+        release_words = [
+            "release",
+            "orgasm",
+            "finish",
+            "complete",
+            "done",
+            "climax",
+            "come",
+        ]
         if any(word in message_lower for word in release_words):
             triggers.append(("release", 0.3))
-        
+
         return triggers
 
     def update_emotional_state(self, message: str) -> Dict[str, Any]:
         """Update emotional state based on message using global weight calculation"""
         # Use the new global weight calculation system
         result = self.emotional_meter.update_emotion_with_global_weight(message)
-        
+
         # Save emotional state
         self.emotional_meter.save_state("data/luna_emotional_state.json")
-        
+
         return result
 
     def generate_emotional_response(self, message: str, user_message: str) -> str:
@@ -367,65 +383,106 @@ class FrameworkCore:
     def create_ai_optimized_data(self, data: Any, data_type: str) -> bytes:
         """Create AI-optimized data structure"""
         return self.ai_backend.create_ai_optimized_data(data, data_type)
-    
+
     def store_emotional_state_ai(self, user_id: str, emotional_state: Dict[str, Any]):
         """Store emotional state in AI-optimized format"""
         self.ai_backend.store_emotional_state(user_id, emotional_state)
-    
+
     def get_emotional_state_ai(self, user_id: str) -> Optional[Dict[str, Any]]:
         """Get emotional state in AI-optimized format"""
         return self.ai_backend.get_emotional_state(user_id)
-    
-    def learn_from_interaction(self, user_id: str, message: str, response: str, emotional_context: Dict[str, Any]):
+
+    def learn_from_interaction(
+        self,
+        user_id: str,
+        message: str,
+        response: str,
+        emotional_context: Dict[str, Any],
+    ):
         """Learn from user interaction to improve responses"""
         # Store in AI-native backend
-        self.ai_backend.learn_from_interaction(user_id, message, response, emotional_context)
-        
+        self.ai_backend.learn_from_interaction(
+            user_id, message, response, emotional_context
+        )
+
         # Learn emotional patterns
         self.self_learning_system.learn_emotional_patterns(emotional_context)
-        
+
         # Create interaction data for learning
         interaction_data = {
             "message": message,
             "response": response,
             "emotional_intensity": emotional_context.get("intensity", 0.5),
-            "response_time": time.time()  # Will be calculated properly in real usage
+            "response_time": time.time(),  # Will be calculated properly in real usage
         }
-        
+
         # Learn from interaction
         self.self_learning_system.learn_from_interaction(interaction_data)
-    
+
     def create_user_profile_ai(self, user_id: str) -> Dict[str, Any]:
         """Create AI-optimized user profile"""
         return self.ai_backend.create_user_profile(user_id)
-    
+
     def get_user_profile_ai(self, user_id: str) -> Optional[Dict[str, Any]]:
         """Get AI-optimized user profile"""
         return self.ai_backend.get_user_profile(user_id)
-    
+
     def set_typing_status(self, user_id: str, is_typing: bool):
         """Set typing status for Discord integration"""
         self.ai_backend.set_typing_status(user_id, is_typing)
-    
+
     def get_typing_status(self, user_id: str) -> bool:
         """Get current typing status for user"""
         return self.ai_backend.get_typing_status(user_id)
-    
+
     def get_ai_backend_stats(self) -> Dict[str, Any]:
         """Get AI-native backend statistics"""
         return self.ai_backend.get_system_stats()
-    
+
     def get_learning_stats(self) -> Dict[str, Any]:
         """Get self-learning system statistics"""
         return self.self_learning_system.get_learning_stats()
-    
+
     def create_optimized_format(self, data: Any, context: str) -> bytes:
         """Create optimized format based on learning patterns"""
         return self.self_learning_system.create_optimized_format(data, context)
-    
+
     def create_ai_native_database(self, data: Any, purpose: str) -> bytes:
         """Create AI-native database structure"""
         return self.self_learning_system.create_ai_native_database(data, purpose)
+    
+    def choose_optimal_language(self, task_description: str) -> Tuple[str, Any, float]:
+        """Choose the optimal programming language for a task"""
+        return self.multi_language_optimizer.choose_optimal_language(task_description)
+    
+    def generate_code_snippet(self, task_description: str, language_name: str) -> str:
+        """Generate a code snippet in the chosen language"""
+        return self.multi_language_optimizer.generate_code_snippet(task_description, language_name)
+    
+    def execute_code_snippet(self, code: str, language: str) -> Dict[str, Any]:
+        """Execute a code snippet in the chosen language"""
+        return self.multi_language_optimizer.execute_code_snippet(code, language)
+    
+    def analyze_task_requirements(self, task_description: str) -> Dict[str, float]:
+        """Analyze task requirements to determine optimal language characteristics"""
+        return self.multi_language_optimizer.analyze_task_requirements(task_description)
+    
+    def get_language_profiles(self) -> Dict[str, Any]:
+        """Get available language profiles"""
+        return {name: {
+            "name": profile.name,
+            "file_extension": profile.file_extension,
+            "strengths": profile.strengths,
+            "weaknesses": profile.weaknesses,
+            "performance_score": profile.performance_score,
+            "memory_efficiency": profile.memory_efficiency,
+            "ai_processing_score": profile.ai_processing_score,
+            "concurrent_processing": profile.concurrent_processing
+        } for name, profile in self.multi_language_optimizer.language_profiles.items()}
+    
+    def get_optimization_stats(self) -> Dict[str, Any]:
+        """Get multi-language optimization statistics"""
+        return self.multi_language_optimizer.get_optimization_stats()
 
     def track_sales(self, project_name: str, sales_data: Dict) -> bool:
         """Track sales data for a project"""
