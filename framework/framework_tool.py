@@ -42,10 +42,15 @@ from pathlib import Path
 from typing import Dict, List, Any, Optional
 from datetime import datetime
 from dataclasses import dataclass, field
+import time
 
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
+
+# Add imports for AI-native backend systems
+from framework.plugins.ai_native_backend import AINativeBackend, ai_backend
+from framework.plugins.self_learning_system import SelfLearningSystem, self_learning_system
 
 # Add project root to path
 project_root = Path(__file__).parent.parent
@@ -109,25 +114,35 @@ class FrameworkCore:
     """Main orchestration class for the authoring bot"""
 
     def __init__(self):
-        self.projects: Dict[str, AuthoringProject] = {}
-        self.stats = AuthoringStats()
-        self.plugins: Dict[str, Any] = {}
-        self.discord_bot = None
-        self.running = False
-
+        """Initialize the framework core with all components"""
+        logger.info("Initializing Framework Core...")
+        
+        # Load configuration
+        self.config = self._load_config()
+        
+        # Initialize AI-native backend systems
+        self.ai_backend = ai_backend
+        self.self_learning_system = self_learning_system
+        
         # Initialize enhanced emotional system
         self.emotional_meter = EnhancedEmotionalMeter()
         self.emotional_blender = EnhancedEmotionalBlender()
         self.dynamic_engine = EnhancedDynamicEmotionEngine()
-
+        
         # Load emotional state
         self.emotional_meter.load_state("data/luna_emotional_state.json")
-
-        # Load configuration
-        self.config = self._load_config()
-
+        
         # Initialize plugins
         self._initialize_plugins()
+        
+        # Initialize data structures
+        self.projects: Dict[str, AuthoringProject] = {}
+        self.stats = AuthoringStats()
+        
+        # Load existing data
+        self.load_data()
+        
+        logger.info("Framework Core initialized successfully")
 
     def _load_config(self) -> Dict[str, Any]:
         """Load configuration from config.py"""
@@ -346,10 +361,71 @@ class FrameworkCore:
         return self.emotional_meter.get_emotional_summary()
 
     def trigger_emotional_release(self) -> Dict[str, Any]:
-        """Manually trigger emotional release"""
-        result = self.emotional_meter.update_emotion("release")
-        self.emotional_meter.save_state("data/luna_emotional_state.json")
-        return result
+        """Trigger emotional release and return to balanced state"""
+        return self.emotional_meter.trigger_release()
+
+    def create_ai_optimized_data(self, data: Any, data_type: str) -> bytes:
+        """Create AI-optimized data structure"""
+        return self.ai_backend.create_ai_optimized_data(data, data_type)
+    
+    def store_emotional_state_ai(self, user_id: str, emotional_state: Dict[str, Any]):
+        """Store emotional state in AI-optimized format"""
+        self.ai_backend.store_emotional_state(user_id, emotional_state)
+    
+    def get_emotional_state_ai(self, user_id: str) -> Optional[Dict[str, Any]]:
+        """Get emotional state in AI-optimized format"""
+        return self.ai_backend.get_emotional_state(user_id)
+    
+    def learn_from_interaction(self, user_id: str, message: str, response: str, emotional_context: Dict[str, Any]):
+        """Learn from user interaction to improve responses"""
+        # Store in AI-native backend
+        self.ai_backend.learn_from_interaction(user_id, message, response, emotional_context)
+        
+        # Learn emotional patterns
+        self.self_learning_system.learn_emotional_patterns(emotional_context)
+        
+        # Create interaction data for learning
+        interaction_data = {
+            "message": message,
+            "response": response,
+            "emotional_intensity": emotional_context.get("intensity", 0.5),
+            "response_time": time.time()  # Will be calculated properly in real usage
+        }
+        
+        # Learn from interaction
+        self.self_learning_system.learn_from_interaction(interaction_data)
+    
+    def create_user_profile_ai(self, user_id: str) -> Dict[str, Any]:
+        """Create AI-optimized user profile"""
+        return self.ai_backend.create_user_profile(user_id)
+    
+    def get_user_profile_ai(self, user_id: str) -> Optional[Dict[str, Any]]:
+        """Get AI-optimized user profile"""
+        return self.ai_backend.get_user_profile(user_id)
+    
+    def set_typing_status(self, user_id: str, is_typing: bool):
+        """Set typing status for Discord integration"""
+        self.ai_backend.set_typing_status(user_id, is_typing)
+    
+    def get_typing_status(self, user_id: str) -> bool:
+        """Get current typing status for user"""
+        return self.ai_backend.get_typing_status(user_id)
+    
+    def get_ai_backend_stats(self) -> Dict[str, Any]:
+        """Get AI-native backend statistics"""
+        return self.ai_backend.get_system_stats()
+    
+    def get_learning_stats(self) -> Dict[str, Any]:
+        """Get self-learning system statistics"""
+        return self.self_learning_system.get_learning_stats()
+    
+    def create_optimized_format(self, data: Any, context: str) -> bytes:
+        """Create optimized format based on learning patterns"""
+        return self.self_learning_system.create_optimized_format(data, context)
+    
+    def create_ai_native_database(self, data: Any, purpose: str) -> bytes:
+        """Create AI-native database structure"""
+        return self.self_learning_system.create_ai_native_database(data, purpose)
 
     def track_sales(self, project_name: str, sales_data: Dict) -> bool:
         """Track sales data for a project"""
