@@ -7,12 +7,19 @@ Allows Luna to have conversations with herself using different personalities
 import json
 import time
 import asyncio
+import sys
 from pathlib import Path
 from typing import Dict, List, Any, Optional, Tuple
 from dataclasses import dataclass, field
 from enum import Enum
 import logging
 import random
+
+# Add framework to path
+framework_dir = Path(__file__).parent.parent
+sys.path.insert(0, str(framework_dir))
+
+from queue_manager import QueueProcessor
 
 logger = logging.getLogger(__name__)
 
@@ -44,10 +51,11 @@ class PersonalityProfile:
     conversation_history: List[Dict] = field(default_factory=list)
 
 
-class MultiPersonalitySystem:
+class MultiPersonalitySystem(QueueProcessor):
     """System that manages multiple personalities for Luna"""
     
     def __init__(self):
+        super().__init__("multi_personality_system")
         self.personalities = self._initialize_personalities()
         self.active_personalities = []
         self.conversation_history = []

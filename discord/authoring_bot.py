@@ -51,6 +51,7 @@ sys.path.insert(0, str(project_root))
 
 # Import framework
 from framework.framework_tool import get_framework
+from framework.queue_manager import QueueProcessor
 
 # Load environment variables
 load_dotenv()
@@ -64,10 +65,13 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-class AuthoringBot:
-    """Discord bot for authoring capabilities"""
+class AuthoringBot(QueueProcessor):
+    """Discord bot for authoring capabilities with queue system integration"""
 
     def __init__(self):
+        # Initialize queue processor
+        super().__init__("authoring_bot")
+
         self.framework = get_framework()
         self.config = self.framework.config
 
@@ -83,7 +87,127 @@ class AuthoringBot:
         # Set up command handlers
         self._setup_commands()
 
-        logger.info("✅ Authoring Bot initialized")
+        logger.info("✅ Authoring Bot initialized with queue system")
+
+    def _process_item(self, item):
+        """Process queue items for authoring bot operations"""
+        try:
+            # Extract operation type from data
+            operation_type = item.data.get("type", "unknown")
+
+            if operation_type == "discord_command":
+                return self._handle_discord_command(item.data)
+            elif operation_type == "project_operation":
+                return self._handle_project_operation(item.data)
+            elif operation_type == "media_generation":
+                return self._handle_media_generation(item.data)
+            elif operation_type == "writing_assistance":
+                return self._handle_writing_assistance(item.data)
+            elif operation_type == "status_request":
+                return self._handle_status_request(item.data)
+            else:
+                # Pass unknown types to base class
+                return super()._process_item(item)
+        except Exception as e:
+            logger.error(f"Error processing authoring bot queue item: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_discord_command(self, data):
+        """Handle Discord command processing"""
+        try:
+            command = data.get("command")
+            args = data.get("args", {})
+            user_id = data.get("user_id")
+
+            # Process command through framework
+            result = self.framework.process_command(command, args, user_id)
+            return {"result": result, "status": "success"}
+        except Exception as e:
+            logger.error(f"Error handling Discord command: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_project_operation(self, data):
+        """Handle project management operations"""
+        try:
+            operation = data.get("operation")
+            project_data = data.get("project_data", {})
+
+            if operation == "create":
+                result = self.framework.create_project(project_data)
+            elif operation == "update":
+                result = self.framework.update_project(project_data)
+            elif operation == "delete":
+                result = self.framework.delete_project(project_data.get("name"))
+            elif operation == "list":
+                result = self.framework.list_projects()
+            else:
+                result = {"error": f"Unknown operation: {operation}"}
+
+            return {"result": result, "status": "success"}
+        except Exception as e:
+            logger.error(f"Error handling project operation: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_media_generation(self, data):
+        """Handle media generation requests"""
+        try:
+            media_type = data.get("type")
+            prompt = data.get("prompt")
+            options = data.get("options", {})
+
+            if media_type == "image":
+                result = self.framework.generate_image(prompt, options)
+            elif media_type == "voice":
+                result = self.framework.generate_voice(prompt, options)
+            elif media_type == "video":
+                result = self.framework.generate_video(prompt, options)
+            else:
+                result = {"error": f"Unknown media type: {media_type}"}
+
+            return {"result": result, "status": "success"}
+        except Exception as e:
+            logger.error(f"Error handling media generation: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_writing_assistance(self, data):
+        """Handle writing assistance requests"""
+        try:
+            assistance_type = data.get("type")
+            content = data.get("content")
+            context = data.get("context", {})
+
+            if assistance_type == "expand":
+                result = self.framework.expand_content(content, context)
+            elif assistance_type == "rewrite":
+                result = self.framework.rewrite_content(content, context)
+            elif assistance_type == "suggest":
+                result = self.framework.suggest_improvements(content, context)
+            else:
+                result = {"error": f"Unknown assistance type: {assistance_type}"}
+
+            return {"result": result, "status": "success"}
+        except Exception as e:
+            logger.error(f"Error handling writing assistance: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_status_request(self, data):
+        """Handle status and health check requests"""
+        try:
+            status_type = data.get("type", "general")
+
+            if status_type == "health":
+                result = self.framework.get_system_health()
+            elif status_type == "stats":
+                result = self.framework.get_system_stats()
+            elif status_type == "projects":
+                result = self.framework.get_project_status()
+            else:
+                result = self.framework.get_general_status()
+
+            return {"result": result, "status": "success"}
+        except Exception as e:
+            logger.error(f"Error handling status request: {e}")
+            return {"error": str(e), "status": "failed"}
 
     def _setup_commands(self):
         """Set up all Discord commands"""

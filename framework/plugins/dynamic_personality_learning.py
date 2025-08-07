@@ -6,6 +6,7 @@ Allows AI to learn and adapt personality based on character interactions and sto
 
 import re
 import json
+import sys
 from pathlib import Path
 from typing import Dict, List, Any, Optional, Tuple
 from dataclasses import dataclass, asdict
@@ -14,6 +15,12 @@ import logging
 from datetime import datetime
 
 from core.config import Config
+
+# Add framework to path
+framework_dir = Path(__file__).parent.parent
+sys.path.insert(0, str(framework_dir))
+
+from queue_manager import QueueProcessor
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -79,13 +86,14 @@ class StoryLearningContext:
     resolution_status: str
 
 
-class DynamicPersonalityLearning:
+class DynamicPersonalityLearning(QueueProcessor):
     """
     Dynamic Personality Learning System
     Enables AI to learn and adapt personality through character interactions and story development
     """
 
     def __init__(self):
+        super().__init__("dynamic_personality_learning")
         self.config = Config()
         # Use the current file's location to determine project root
         project_root = Path(__file__).parent.parent.parent
@@ -598,6 +606,160 @@ class DynamicPersonalityLearning:
         self.learning_patterns = {}
         self._save_learning_data()
         logger.info("Learning data reset")
+
+    def _process_item(self, item):
+        """Process queue items for dynamic personality learning operations"""
+        try:
+            # Extract operation type from data
+            operation_type = item.data.get("type", "unknown")
+            
+            if operation_type == "learn_from_character_interaction":
+                return self._handle_learn_from_character_interaction(item.data)
+            elif operation_type == "learn_from_story_development":
+                return self._handle_learn_from_story_development(item.data)
+            elif operation_type == "learn_from_emotional_response":
+                return self._handle_learn_from_emotional_response(item.data)
+            elif operation_type == "get_character_learning_summary":
+                return self._handle_get_character_learning_summary(item.data)
+            elif operation_type == "get_story_learning_summary":
+                return self._handle_get_story_learning_summary(item.data)
+            elif operation_type == "get_learning_patterns":
+                return self._handle_get_learning_patterns(item.data)
+            elif operation_type == "reset_learning_data":
+                return self._handle_reset_learning_data(item.data)
+            else:
+                # Pass unknown types to base class
+                return super()._process_item(item)
+        except Exception as e:
+            logger.error(f"Error processing dynamic personality learning queue item: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_learn_from_character_interaction(self, data):
+        """Handle character interaction learning requests"""
+        try:
+            character_name = data.get("character_name", "")
+            interaction_content = data.get("interaction_content", "")
+            emotional_intensity = data.get("emotional_intensity", 0.5)
+            context = data.get("context", {})
+            
+            if character_name and interaction_content:
+                learning_event = self.learn_from_character_interaction(
+                    character_name, interaction_content, emotional_intensity, context
+                )
+                return {
+                    "status": "success",
+                    "learning_event": learning_event,
+                    "character_name": character_name
+                }
+            else:
+                return {"error": "Missing character_name or interaction_content", "status": "failed"}
+        except Exception as e:
+            logger.error(f"Error in learn from character interaction: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_learn_from_story_development(self, data):
+        """Handle story development learning requests"""
+        try:
+            story_id = data.get("story_id", "")
+            story_content = data.get("story_content", "")
+            current_arc = data.get("current_arc", "main")
+            context = data.get("context", {})
+            
+            if story_id and story_content:
+                learning_event = self.learn_from_story_development(
+                    story_id, story_content, current_arc, context
+                )
+                return {
+                    "status": "success",
+                    "learning_event": learning_event,
+                    "story_id": story_id
+                }
+            else:
+                return {"error": "Missing story_id or story_content", "status": "failed"}
+        except Exception as e:
+            logger.error(f"Error in learn from story development: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_learn_from_emotional_response(self, data):
+        """Handle emotional response learning requests"""
+        try:
+            emotion_type = data.get("emotion_type", "")
+            response_content = data.get("response_content", "")
+            intensity = data.get("intensity", 0.5)
+            character_name = data.get("character_name")
+            
+            if emotion_type and response_content:
+                learning_event = self.learn_from_emotional_response(
+                    emotion_type, response_content, intensity, character_name
+                )
+                return {
+                    "status": "success",
+                    "learning_event": learning_event,
+                    "emotion_type": emotion_type
+                }
+            else:
+                return {"error": "Missing emotion_type or response_content", "status": "failed"}
+        except Exception as e:
+            logger.error(f"Error in learn from emotional response: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_get_character_learning_summary(self, data):
+        """Handle get character learning summary requests"""
+        try:
+            character_name = data.get("character_name", "")
+            if character_name:
+                summary = self.get_character_learning_summary(character_name)
+                return {
+                    "status": "success",
+                    "summary": summary,
+                    "character_name": character_name
+                }
+            else:
+                return {"error": "Missing character_name", "status": "failed"}
+        except Exception as e:
+            logger.error(f"Error in get character learning summary: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_get_story_learning_summary(self, data):
+        """Handle get story learning summary requests"""
+        try:
+            story_id = data.get("story_id", "")
+            if story_id:
+                summary = self.get_story_learning_summary(story_id)
+                return {
+                    "status": "success",
+                    "summary": summary,
+                    "story_id": story_id
+                }
+            else:
+                return {"error": "Missing story_id", "status": "failed"}
+        except Exception as e:
+            logger.error(f"Error in get story learning summary: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_get_learning_patterns(self, data):
+        """Handle get learning patterns requests"""
+        try:
+            patterns = self.get_learning_patterns()
+            return {
+                "status": "success",
+                "patterns": patterns
+            }
+        except Exception as e:
+            logger.error(f"Error in get learning patterns: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_reset_learning_data(self, data):
+        """Handle reset learning data requests"""
+        try:
+            self.reset_learning_data()
+            return {
+                "status": "success",
+                "message": "Learning data reset successfully"
+            }
+        except Exception as e:
+            logger.error(f"Error in reset learning data: {e}")
+            return {"error": str(e), "status": "failed"}
 
 
 def initialize(framework=None):

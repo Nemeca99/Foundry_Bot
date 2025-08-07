@@ -71,6 +71,12 @@ from framework.plugins.dynamic_personality_creator import (
     dynamic_personality_creator,
 )
 
+# Simulacra plugin will be imported lazily to avoid config conflicts
+# from framework.plugins.simulacra_game_system import (
+#     SimulacraGameSystem,
+#     create_plugin as create_simulacra_plugin,
+# )
+
 # Add project root to path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
@@ -172,22 +178,50 @@ class FrameworkCore:
 
     def _load_config(self) -> Dict[str, Any]:
         """Load configuration from config.py"""
-        from core.config import Config
+        try:
+            # Import the main config explicitly to avoid conflicts
+            import sys
+            from pathlib import Path
+
+            # Ensure we're importing from the main project's core.config
+            project_root = Path(__file__).parent.parent
+            main_core_path = project_root / "core"
+
+            if str(main_core_path) not in sys.path:
+                sys.path.insert(0, str(main_core_path))
+
+            from core.config import Config as MainConfig
+        except ImportError:
+            # Fallback configuration if config.py is not available
+            return {
+                "discord_token": "",
+                "ollama_url": "http://localhost:11434",
+                "ollama_model": "llama3.2",
+                "allowed_users": [],
+                "allowed_channels": [],
+                "max_tokens": 1024,
+                "temperature": 0.85,
+                "bot_prefix": "!",
+                "request_timeout": 600,
+                "chunk_size": 1000,
+                "overlap_size": 200,
+                "max_workers": 4,
+            }
 
         return {
-            "discord_token": Config.DISCORD_TOKEN,
-            "ollama_url": Config.OLLAMA_BASE_URL,
-            "ollama_model": Config.OLLAMA_MODEL_NAME,
-            "allowed_users": Config.ALLOWED_USERS,
-            "allowed_channels": Config.ALLOWED_CHANNELS,
-            "max_tokens": Config.MAX_TOKENS,
-            "temperature": Config.TEMPERATURE,
-            "bot_prefix": Config.BOT_PREFIX,
-            "request_timeout": Config.REQUEST_TIMEOUT,
+            "discord_token": MainConfig.DISCORD_TOKEN,
+            "ollama_url": MainConfig.OLLAMA_BASE_URL,
+            "ollama_model": MainConfig.OLLAMA_MODEL_NAME,
+            "allowed_users": MainConfig.ALLOWED_USERS,
+            "allowed_channels": MainConfig.ALLOWED_CHANNELS,
+            "max_tokens": MainConfig.MAX_TOKENS,
+            "temperature": MainConfig.TEMPERATURE,
+            "bot_prefix": MainConfig.BOT_PREFIX,
+            "request_timeout": MainConfig.REQUEST_TIMEOUT,
             # Learning engine configuration
-            "chunk_size": Config.CHUNK_SIZE,
-            "overlap_size": Config.OVERLAP_SIZE,
-            "max_workers": Config.MAX_WORKERS,
+            "chunk_size": MainConfig.CHUNK_SIZE,
+            "overlap_size": MainConfig.OVERLAP_SIZE,
+            "max_workers": MainConfig.MAX_WORKERS,
         }
 
     def _initialize_plugins(self):
@@ -198,6 +232,22 @@ class FrameworkCore:
             logger.warning(f"Plugins directory not found: {plugins_dir}")
             return
 
+        # Initialize core plugins
+        self.plugins = {}
+
+        # Add Simulacra game system (lazy import to avoid config conflicts)
+        try:
+            from framework.plugins.simulacra_game_system import (
+                create_plugin as create_simulacra_plugin,
+            )
+
+            simulacra_plugin = create_simulacra_plugin()
+            self.plugins["simulacra_game_system"] = simulacra_plugin
+            logger.info("✅ Loaded plugin: simulacra_game_system")
+        except Exception as e:
+            logger.error(f"❌ Failed to load Simulacra game system: {e}")
+
+        # Load other plugins dynamically
         for plugin_file in plugins_dir.glob("*.py"):
             if plugin_file.name.startswith("__"):
                 continue
@@ -205,6 +255,9 @@ class FrameworkCore:
             try:
                 # Import plugin module
                 plugin_name = plugin_file.stem
+                logger.info(
+                    f"🔍 Attempting to load plugin: {plugin_name} from {plugin_file}"
+                )
                 plugin_module = __import__(
                     f"framework.plugins.{plugin_name}", fromlist=[""]
                 )
@@ -219,6 +272,9 @@ class FrameworkCore:
 
             except Exception as e:
                 logger.error(f"❌ Failed to load plugin {plugin_file.name}: {e}")
+                import traceback
+
+                logger.error(f"Full traceback: {traceback.format_exc()}")
 
     def create_project(
         self, name: str, genre: str, target_audience: str, word_count_goal: int
@@ -277,7 +333,14 @@ class FrameworkCore:
         if "text_generator" in self.plugins:
             return self.plugins["text_generator"].generate_text(prompt, project_context)
         else:
-            return f"Text generation not available. Prompt: {prompt}"
+            # Debug: show available plugins
+            available_plugins = (
+                list(self.plugins.keys()) if hasattr(self, "plugins") else []
+            )
+            logger.error(
+                f"Text generator not found. Available plugins: {available_plugins}"
+            )
+            return f"Text generation not available. Available plugins: {available_plugins}. Prompt: {prompt}"
 
     def generate_image(self, prompt: str, style: str = "book_cover") -> str:
         """Generate image using the image generation plugin"""
@@ -960,9 +1023,9 @@ class FrameworkCore:
     ) -> Dict[str, Any]:
         """Analyze emotions in content"""
         if "content_emotion_integration" in self.plugins:
-            return self.plugins["content_emotion_integration"].analyze_content_for_emotions(
-                content, content_id
-            )
+            return self.plugins[
+                "content_emotion_integration"
+            ].analyze_content_for_emotions(content, content_id)
         return {"error": "Content-emotion integration system not available"}
 
     def generate_character_emotional_response(
@@ -987,6 +1050,261 @@ class FrameworkCore:
                 "content_emotion_integration"
             ].get_character_emotional_summary(character_name)
         return {"error": "Content-emotion integration system not available"}
+
+    # Simulacra Game System Methods
+    async def get_simulacra_game_status(self, user_id: str) -> Dict[str, Any]:
+        """Get current Simulacra game status for a user"""
+        if "simulacra_game_system" in self.plugins:
+            return await self.plugins["simulacra_game_system"].get_game_status(user_id)
+        return {"error": "Simulacra game system plugin not available"}
+
+    async def hatch_simulacra_drone(
+        self, user_id: str, drone_type: str = "standard", name: str = None
+    ) -> Dict[str, Any]:
+        """Hatch a new Simulacra drone"""
+        if "simulacra_game_system" in self.plugins:
+            return await self.plugins["simulacra_game_system"].hatch_drone(
+                user_id, drone_type, name
+            )
+        return {"error": "Simulacra game system plugin not available"}
+
+    async def simulate_simulacra_world(
+        self, duration: int = 60, drone_count: int = 10
+    ) -> Dict[str, Any]:
+        """Simulate the Simulacra game world"""
+        if "simulacra_game_system" in self.plugins:
+            return await self.plugins["simulacra_game_system"].simulate_world(
+                duration, drone_count
+            )
+        return {"error": "Simulacra game system plugin not available"}
+
+    async def simulacra_gacha_pull(
+        self, user_id: str, amount: int = 1
+    ) -> Dict[str, Any]:
+        """Perform a gacha pull in Simulacra"""
+        if "simulacra_game_system" in self.plugins:
+            return await self.plugins["simulacra_game_system"].gacha_pull(
+                user_id, amount
+            )
+        return {"error": "Simulacra game system plugin not available"}
+
+    async def get_simulacra_drone_info(self, drone_name: str) -> Dict[str, Any]:
+        """Get detailed information about a Simulacra drone"""
+        if "simulacra_game_system" in self.plugins:
+            return await self.plugins["simulacra_game_system"].get_drone_info(
+                drone_name
+            )
+        return {"error": "Simulacra game system plugin not available"}
+
+    async def manage_simulacra_kingdom(
+        self, user_id: str, action: str, **kwargs
+    ) -> Dict[str, Any]:
+        """Handle Simulacra kingdom management actions"""
+        if "simulacra_game_system" in self.plugins:
+            return await self.plugins["simulacra_game_system"].kingdom_management(
+                user_id, action, **kwargs
+            )
+        return {"error": "Simulacra game system plugin not available"}
+
+    async def manage_simulacra_resources(
+        self, user_id: str, action: str, **kwargs
+    ) -> Dict[str, Any]:
+        """Handle Simulacra resource management actions"""
+        if "simulacra_game_system" in self.plugins:
+            return await self.plugins["simulacra_game_system"].resource_management(
+                user_id, action, **kwargs
+            )
+        return {"error": "Simulacra game system plugin not available"}
+
+    async def manage_simulacra_hunting(
+        self, user_id: str, action: str, **kwargs
+    ) -> Dict[str, Any]:
+        """Handle Simulacra hunting management actions"""
+        if "simulacra_game_system" in self.plugins:
+            return await self.plugins["simulacra_game_system"].hunting_management(
+                user_id, action, **kwargs
+            )
+        return {"error": "Simulacra game system plugin not available"}
+
+    async def manage_simulacra_trade(
+        self, user_id: str, action: str, **kwargs
+    ) -> Dict[str, Any]:
+        """Handle Simulacra trade management actions"""
+        if "simulacra_game_system" in self.plugins:
+            return await self.plugins["simulacra_game_system"].trade_management(
+                user_id, action, **kwargs
+            )
+        return {"error": "Simulacra game system plugin not available"}
+
+    async def simulacra_consciousness_interaction(
+        self, message: str, user_id: str = None
+    ) -> Dict[str, Any]:
+        """Handle Simulacra consciousness-based interactions"""
+        if "simulacra_game_system" in self.plugins:
+            return await self.plugins[
+                "simulacra_game_system"
+            ].consciousness_interaction(message, user_id)
+        return {"error": "Simulacra game system plugin not available"}
+
+    async def get_simulacra_leaderboard(self) -> Dict[str, Any]:
+        """Get the current Simulacra leaderboard"""
+        if "simulacra_game_system" in self.plugins:
+            return await self.plugins["simulacra_game_system"].get_leaderboard()
+        return {"error": "Simulacra game system plugin not available"}
+
+    async def get_simulacra_disasters(self) -> Dict[str, Any]:
+        """Get currently active Simulacra disasters"""
+        if "simulacra_game_system" in self.plugins:
+            return await self.plugins["simulacra_game_system"].get_active_disasters()
+        return {"error": "Simulacra game system plugin not available"}
+
+    async def get_simulacra_network_state(self) -> Dict[str, Any]:
+        """Get the current Simulacra network consciousness state"""
+        if "simulacra_game_system" in self.plugins:
+            return await self.plugins["simulacra_game_system"].get_network_state()
+        return {"error": "Simulacra game system plugin not available"}
+
+    # Luna NPC Integration Methods
+    async def embody_luna_npc(
+        self, npc_type: str, user_id: str = None
+    ) -> Dict[str, Any]:
+        """Embody a specific Luna emotional fragment as an NPC in the game world"""
+        if "simulacra_game_system" in self.plugins:
+            return await self.plugins["simulacra_game_system"].embody_luna_npc(
+                npc_type, user_id
+            )
+        return {"error": "Simulacra game system plugin not available"}
+
+    async def interact_with_luna_npc(
+        self, npc_type: str, message: str, user_id: str = None
+    ) -> Dict[str, Any]:
+        """Interact with an embodied Luna NPC"""
+        if "simulacra_game_system" in self.plugins:
+            return await self.plugins["simulacra_game_system"].interact_with_luna_npc(
+                npc_type, message, user_id
+            )
+        return {"error": "Simulacra game system plugin not available"}
+
+    async def get_active_luna_npcs(self) -> Dict[str, Any]:
+        """Get list of currently active Luna NPCs"""
+        if "simulacra_game_system" in self.plugins:
+            return await self.plugins["simulacra_game_system"].get_active_luna_npcs()
+        return {"error": "Simulacra game system plugin not available"}
+
+    async def release_luna_npc(self, npc_type: str) -> Dict[str, Any]:
+        """Release an embodied Luna NPC back to Luna's core personality"""
+        if "simulacra_game_system" in self.plugins:
+            return await self.plugins["simulacra_game_system"].release_luna_npc(
+                npc_type
+            )
+        return {"error": "Simulacra game system plugin not available"}
+
+    async def get_npc_memories(self, npc_type: str) -> Dict[str, Any]:
+        """Get memories of interactions with a specific Luna NPC"""
+        if "simulacra_game_system" in self.plugins:
+            return await self.plugins["simulacra_game_system"].get_npc_memories(
+                npc_type
+            )
+        return {"error": "Simulacra game system plugin not available"}
+
+    # Writing Assistant Methods
+    def autocomplete(
+        self, project_name: str, current_text: str, word_count: int = 400
+    ) -> str:
+        """Continue the story from where it left off"""
+        if "writing_assistant" in self.plugins:
+            return self.plugins["writing_assistant"].autocomplete(
+                project_name, current_text, word_count
+            )
+        return f"Writing assistant not available. Text: {current_text[:100]}..."
+
+    def expand_scene(self, project_name: str, scene_text: str) -> str:
+        """Expand a scene with more detail and description"""
+        if "writing_assistant" in self.plugins:
+            return self.plugins["writing_assistant"].expand_scene(
+                project_name, scene_text
+            )
+        return f"Writing assistant not available. Scene: {scene_text[:100]}..."
+
+    def generate_description(
+        self, project_name: str, element: str, context: str = ""
+    ) -> str:
+        """Generate rich description for a scene/element"""
+        if "writing_assistant" in self.plugins:
+            return self.plugins["writing_assistant"].generate_description(
+                project_name, element, context
+            )
+        return f"Writing assistant not available. Element: {element}"
+
+    def rewrite_passage(self, project_name: str, original_text: str) -> Dict[str, str]:
+        """Rewrite passage in different styles"""
+        if "writing_assistant" in self.plugins:
+            return self.plugins["writing_assistant"].rewrite_passage(
+                project_name, original_text
+            )
+        return {"error": "Writing assistant not available"}
+
+    def generate_dialogue(
+        self,
+        project_name: str,
+        characters: List[str],
+        situation: str,
+        context: str = "",
+    ) -> str:
+        """Generate natural dialogue for characters"""
+        if "writing_assistant" in self.plugins:
+            return self.plugins["writing_assistant"].generate_dialogue(
+                project_name, characters, situation, context
+            )
+        return f"Writing assistant not available. Characters: {', '.join(characters)}"
+
+    def brainstorm_ideas(
+        self, element: str, genre: str, context: str = ""
+    ) -> List[str]:
+        """Brainstorm creative ideas for writing elements"""
+        if "writing_assistant" in self.plugins:
+            return self.plugins["writing_assistant"].brainstorm_ideas(
+                element, genre, context
+            )
+        return [f"Writing assistant not available. Element: {element}"]
+
+    def story_canvas(self, project_name: str) -> Dict[str, Any]:
+        """Create a story canvas with plot points and character arcs"""
+        if "writing_assistant" in self.plugins:
+            return self.plugins["writing_assistant"].story_canvas(project_name)
+        return {"error": "Writing assistant not available"}
+
+    def character_bible(self, character_name: str, role: str, genre: str) -> str:
+        """Create comprehensive character profile"""
+        if "writing_assistant" in self.plugins:
+            return self.plugins["writing_assistant"].character_bible(
+                character_name, role, genre
+            )
+        return f"Writing assistant not available. Character: {character_name}"
+
+    def world_building(self, genre: str, setting: str) -> str:
+        """Generate world-building content"""
+        if "writing_assistant" in self.plugins:
+            return self.plugins["writing_assistant"].world_building(genre, setting)
+        return f"Writing assistant not available. Setting: {setting}"
+
+    def name_generator(
+        self, element_type: str, genre: str, setting: str, culture: str = ""
+    ) -> List[str]:
+        """Generate names for characters, places, etc."""
+        if "writing_assistant" in self.plugins:
+            return self.plugins["writing_assistant"].name_generator(
+                element_type, genre, setting, culture
+            )
+        return [f"Writing assistant not available. Type: {element_type}"]
+
+    def plot_twist_generator(self, current_plot: str, genre: str) -> List[str]:
+        """Generate plot twists for your story"""
+        if "writing_assistant" in self.plugins:
+            return self.plugins["writing_assistant"].plot_twist_generator(
+                current_plot, genre
+            )
+        return [f"Writing assistant not available. Plot: {current_plot[:50]}..."]
 
     def track_sales(self, project_name: str, sales_data: Dict) -> bool:
         """Track sales data for a project"""

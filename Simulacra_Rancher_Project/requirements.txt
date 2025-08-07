@@ -1,0 +1,93 @@
+# Simulacra Rancher Project - Development Dependencies
+# This file documents the current development environment
+
+# Core Game Dependencies
+discord.py==2.5.2
+requests==2.32.3
+aiohttp==3.12.9
+websocket-client==1.8.0
+
+# AI and LLM Dependencies
+openai==1.84.0
+ollama==0.5.1
+lmstudio==1.3.1
+litellm==1.72.2
+transformers==4.51.3
+torch==2.7.1
+tokenizers==0.21.1
+tiktoken==0.9.0
+
+# Database and Data Processing
+# sqlite3 is built-in to Python - no installation needed
+pandas==2.3.0
+numpy==2.2.5
+pyarrow==20.0.0
+
+# Development and Testing Tools
+pytest==8.3.5
+pytest-asyncio==0.26.0
+pytest-cov==6.1.1
+pytest-timeout==2.4.0
+black==25.1.0
+flake8==7.3.0
+pylint==3.3.7
+mypy==1.15.0
+coverage==7.8.0
+
+# Code Quality and Formatting
+isort==6.0.1
+pre-commit==4.2.0
+
+# Documentation
+sphinx==8.2.3
+sphinx-rtd-theme==3.0.2
+
+# Monitoring and Logging
+python-json-logger==3.3.0
+sentry-sdk==2.32.0
+
+# Utilities
+python-dotenv==1.1.0
+PyYAML==6.0.2
+schedule==1.2.2
+rich==14.0.0
+
+# Optional: Advanced Development Tools
+# Uncomment if you want these additional tools:
+
+# Jupyter for interactive development
+# jupyter==1.1.1
+# ipython==9.4.0
+
+# Machine Learning (if you want to add ML features)
+# scikit-learn==1.7.0
+# scipy==1.15.3
+
+# Web Development (if you want to add web interface)
+# fastapi==0.116.1
+# uvicorn==0.35.0
+
+# Data Visualization (if you want to add charts/graphs)
+# matplotlib==3.10.3
+# plotly==6.2.0
+# seaborn==0.13.2
+
+# Audio Processing (if you want to add voice features)
+# PyAudio==0.2.14
+# SpeechRecognition==3.14.2
+
+# Game Development (if you want to add visual elements)
+# pygame==2.6.1
+# arcade==3.2.0
+# pymunk==6.9.0
+
+# Note: This environment is already very comprehensive!
+# You have excellent tools for:
+# - AI/LLM development (openai, ollama, transformers)
+# - Game development (pygame, arcade)
+# - Web development (fastapi, flask)
+# - Data science (pandas, numpy, matplotlib)
+# - Testing (pytest, coverage)
+# - Code quality (black, flake8, pylint)
+# - Documentation (sphinx)
+# - Monitoring (sentry) 

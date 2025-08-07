@@ -6,6 +6,7 @@ Provides character growth and evolution systems, character arc tracking, and cha
 
 import re
 import json
+import sys
 from pathlib import Path
 from typing import Dict, List, Any, Optional, Tuple
 from dataclasses import dataclass, asdict
@@ -15,6 +16,12 @@ from datetime import datetime
 import random
 
 from core.config import Config
+
+# Add framework to path
+framework_dir = Path(__file__).parent.parent
+sys.path.insert(0, str(framework_dir))
+
+from queue_manager import QueueProcessor
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -85,13 +92,14 @@ class CharacterGrowth:
     transformation_level: float  # 0.0 to 1.0
 
 
-class CharacterDevelopmentEngine:
+class CharacterDevelopmentEngine(QueueProcessor):
     """
     Character Development Engine
     Provides character growth and evolution tracking
     """
 
     def __init__(self):
+        super().__init__("character_development_engine")
         self.config = Config()
         # Use the current file's location to determine project root
         project_root = Path(__file__).parent.parent.parent
@@ -99,7 +107,7 @@ class CharacterDevelopmentEngine:
         self.development_data_dir.mkdir(parents=True, exist_ok=True)
 
         self.character_arcs = {}
-        self.development_events = []
+        self.development_events = {}
         self.character_growth = {}
 
         # Load existing development data
@@ -163,6 +171,321 @@ class CharacterDevelopmentEngine:
             logger.info("Saved development data")
         except Exception as e:
             logger.error(f"Error saving development data: {e}")
+
+    def _process_item(self, item):
+        """Process queue items for character development engine operations"""
+        try:
+            # Extract operation type from data
+            operation_type = item.data.get("type", "unknown")
+            
+            if operation_type == "create_character_arc":
+                return self._handle_create_character_arc(item.data)
+            elif operation_type == "add_development_event":
+                return self._handle_add_development_event(item.data)
+            elif operation_type == "get_character_arc":
+                return self._handle_get_character_arc(item.data)
+            elif operation_type == "get_development_events":
+                return self._handle_get_development_events(item.data)
+            elif operation_type == "get_character_growth":
+                return self._handle_get_character_growth(item.data)
+            elif operation_type == "suggest_character_development":
+                return self._handle_suggest_character_development(item.data)
+            elif operation_type == "analyze_character_progress":
+                return self._handle_analyze_character_progress(item.data)
+            elif operation_type == "get_character_development_summary":
+                return self._handle_get_character_development_summary(item.data)
+            elif operation_type == "create_development_scenario":
+                return self._handle_create_development_scenario(item.data)
+            elif operation_type == "advance_character_manually":
+                return self._handle_advance_character_manually(item.data)
+            elif operation_type == "reset_character_development":
+                return self._handle_reset_character_development(item.data)
+            elif operation_type == "reset_all_development":
+                return self._handle_reset_all_development(item.data)
+            else:
+                # Pass unknown types to base class
+                return super()._process_item(item)
+        except Exception as e:
+            logger.error(f"Error processing character development engine queue item: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_create_character_arc(self, data):
+        """Handle create character arc requests"""
+        try:
+            character_name = data.get("character_name", "")
+            arc_description = data.get("arc_description", "")
+            initial_stage = data.get("initial_stage", "introduction")
+            
+            if character_name and arc_description:
+                if initial_stage == "introduction":
+                    stage = DevelopmentStage.INTRODUCTION
+                elif initial_stage == "conflict":
+                    stage = DevelopmentStage.CONFLICT
+                elif initial_stage == "growth":
+                    stage = DevelopmentStage.GROWTH
+                elif initial_stage == "crisis":
+                    stage = DevelopmentStage.CRISIS
+                elif initial_stage == "resolution":
+                    stage = DevelopmentStage.RESOLUTION
+                elif initial_stage == "transformation":
+                    stage = DevelopmentStage.TRANSFORMATION
+                else:
+                    stage = DevelopmentStage.INTRODUCTION
+                
+                arc = self.create_character_arc(character_name, arc_description, stage)
+                return {
+                    "status": "success",
+                    "arc": arc,
+                    "character_name": character_name
+                }
+            else:
+                return {"error": "Missing character_name or arc_description", "status": "failed"}
+        except Exception as e:
+            logger.error(f"Error in create character arc: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_add_development_event(self, data):
+        """Handle add development event requests"""
+        try:
+            character_name = data.get("character_name", "")
+            trigger = data.get("trigger", "")
+            description = data.get("description", "")
+            impact_score = data.get("impact_score", 0.5)
+            growth_areas_affected = data.get("growth_areas_affected", [])
+            before_state = data.get("before_state", {})
+            after_state = data.get("after_state", {})
+            
+            if character_name and trigger and description:
+                if trigger == "story_event":
+                    dev_trigger = DevelopmentTrigger.STORY_EVENT
+                elif trigger == "character_interaction":
+                    dev_trigger = DevelopmentTrigger.CHARACTER_INTERACTION
+                elif trigger == "emotional_experience":
+                    dev_trigger = DevelopmentTrigger.EMOTIONAL_EXPERIENCE
+                elif trigger == "challenge_overcome":
+                    dev_trigger = DevelopmentTrigger.CHALLENGE_OVERCOME
+                elif trigger == "relationship_change":
+                    dev_trigger = DevelopmentTrigger.RELATIONSHIP_CHANGE
+                elif trigger == "self_reflection":
+                    dev_trigger = DevelopmentTrigger.SELF_REFLECTION
+                else:
+                    dev_trigger = DevelopmentTrigger.STORY_EVENT
+                
+                event = self.add_development_event(character_name, dev_trigger, description, impact_score, growth_areas_affected, before_state, after_state)
+                return {
+                    "status": "success",
+                    "event": event,
+                    "character_name": character_name
+                }
+            else:
+                return {"error": "Missing required parameters", "status": "failed"}
+        except Exception as e:
+            logger.error(f"Error in add development event: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_get_character_arc(self, data):
+        """Handle get character arc requests"""
+        try:
+            character_name = data.get("character_name", "")
+            if character_name:
+                arc = self.get_character_arc(character_name)
+                return {
+                    "status": "success",
+                    "arc": arc,
+                    "character_name": character_name
+                }
+            else:
+                return {"error": "Missing character_name", "status": "failed"}
+        except Exception as e:
+            logger.error(f"Error in get character arc: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_get_development_events(self, data):
+        """Handle get development events requests"""
+        try:
+            character_name = data.get("character_name", "")
+            trigger = data.get("trigger", "")
+            
+            if character_name:
+                if trigger:
+                    if trigger == "story_event":
+                        dev_trigger = DevelopmentTrigger.STORY_EVENT
+                    elif trigger == "character_interaction":
+                        dev_trigger = DevelopmentTrigger.CHARACTER_INTERACTION
+                    elif trigger == "emotional_experience":
+                        dev_trigger = DevelopmentTrigger.EMOTIONAL_EXPERIENCE
+                    elif trigger == "challenge_overcome":
+                        dev_trigger = DevelopmentTrigger.CHALLENGE_OVERCOME
+                    elif trigger == "relationship_change":
+                        dev_trigger = DevelopmentTrigger.RELATIONSHIP_CHANGE
+                    elif trigger == "self_reflection":
+                        dev_trigger = DevelopmentTrigger.SELF_REFLECTION
+                    else:
+                        dev_trigger = None
+                else:
+                    dev_trigger = None
+                
+                events = self.get_development_events(character_name, dev_trigger)
+                return {
+                    "status": "success",
+                    "events": events,
+                    "character_name": character_name
+                }
+            else:
+                return {"error": "Missing character_name", "status": "failed"}
+        except Exception as e:
+            logger.error(f"Error in get development events: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_get_character_growth(self, data):
+        """Handle get character growth requests"""
+        try:
+            character_name = data.get("character_name", "")
+            if character_name:
+                growth = self.get_character_growth(character_name)
+                return {
+                    "status": "success",
+                    "growth": growth,
+                    "character_name": character_name
+                }
+            else:
+                return {"error": "Missing character_name", "status": "failed"}
+        except Exception as e:
+            logger.error(f"Error in get character growth: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_suggest_character_development(self, data):
+        """Handle suggest character development requests"""
+        try:
+            character_name = data.get("character_name", "")
+            if character_name:
+                suggestions = self.suggest_character_development(character_name)
+                return {
+                    "status": "success",
+                    "suggestions": suggestions,
+                    "character_name": character_name
+                }
+            else:
+                return {"error": "Missing character_name", "status": "failed"}
+        except Exception as e:
+            logger.error(f"Error in suggest character development: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_analyze_character_progress(self, data):
+        """Handle analyze character progress requests"""
+        try:
+            character_name = data.get("character_name", "")
+            if character_name:
+                analysis = self.analyze_character_progress(character_name)
+                return {
+                    "status": "success",
+                    "analysis": analysis,
+                    "character_name": character_name
+                }
+            else:
+                return {"error": "Missing character_name", "status": "failed"}
+        except Exception as e:
+            logger.error(f"Error in analyze character progress: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_get_character_development_summary(self, data):
+        """Handle get character development summary requests"""
+        try:
+            character_name = data.get("character_name", "")
+            if character_name:
+                summary = self.get_character_development_summary(character_name)
+                return {
+                    "status": "success",
+                    "summary": summary,
+                    "character_name": character_name
+                }
+            else:
+                return {"error": "Missing character_name", "status": "failed"}
+        except Exception as e:
+            logger.error(f"Error in get character development summary: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_create_development_scenario(self, data):
+        """Handle create development scenario requests"""
+        try:
+            character_name = data.get("character_name", "")
+            scenario_type = data.get("scenario_type", "")
+            
+            if character_name and scenario_type:
+                scenario = self.create_development_scenario(character_name, scenario_type)
+                return {
+                    "status": "success",
+                    "scenario": scenario,
+                    "character_name": character_name
+                }
+            else:
+                return {"error": "Missing character_name or scenario_type", "status": "failed"}
+        except Exception as e:
+            logger.error(f"Error in create development scenario: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_advance_character_manually(self, data):
+        """Handle advance character manually requests"""
+        try:
+            character_name = data.get("character_name", "")
+            new_stage = data.get("new_stage", "")
+            
+            if character_name and new_stage:
+                if new_stage == "introduction":
+                    stage = DevelopmentStage.INTRODUCTION
+                elif new_stage == "conflict":
+                    stage = DevelopmentStage.CONFLICT
+                elif new_stage == "growth":
+                    stage = DevelopmentStage.GROWTH
+                elif new_stage == "crisis":
+                    stage = DevelopmentStage.CRISIS
+                elif new_stage == "resolution":
+                    stage = DevelopmentStage.RESOLUTION
+                elif new_stage == "transformation":
+                    stage = DevelopmentStage.TRANSFORMATION
+                else:
+                    return {"error": "Invalid stage", "status": "failed"}
+                
+                self.advance_character_manually(character_name, stage)
+                return {
+                    "status": "success",
+                    "message": f"Character {character_name} advanced to {new_stage}",
+                    "character_name": character_name
+                }
+            else:
+                return {"error": "Missing character_name or new_stage", "status": "failed"}
+        except Exception as e:
+            logger.error(f"Error in advance character manually: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_reset_character_development(self, data):
+        """Handle reset character development requests"""
+        try:
+            character_name = data.get("character_name", "")
+            if character_name:
+                self.reset_character_development(character_name)
+                return {
+                    "status": "success",
+                    "message": f"Development reset for {character_name}",
+                    "character_name": character_name
+                }
+            else:
+                return {"error": "Missing character_name", "status": "failed"}
+        except Exception as e:
+            logger.error(f"Error in reset character development: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_reset_all_development(self, data):
+        """Handle reset all development requests"""
+        try:
+            self.reset_all_development()
+            return {
+                "status": "success",
+                "message": "All development data reset"
+            }
+        except Exception as e:
+            logger.error(f"Error in reset all development: {e}")
+            return {"error": str(e), "status": "failed"}
 
     def create_character_arc(
         self,

@@ -52,6 +52,7 @@ try:
     import pygame
     import wave
     import numpy as np
+
     ENHANCED_AVAILABLE = True
 except ImportError:
     ENHANCED_AVAILABLE = False
@@ -75,26 +76,26 @@ class VoiceGenerator:
         self.pyttsx3_engine = None
         self.voice_presets = self._initialize_voice_presets()
         self.available_voices = {}
-        
+
         # API configurations
         self.api_configs = {
             "elevenlabs": {
                 "url": "https://api.elevenlabs.io/v1/text-to-speech",
                 "timeout": 30,
-                "enabled": False  # Requires API key
+                "enabled": False,  # Requires API key
             },
             "openai_tts": {
                 "url": "https://api.openai.com/v1/audio/speech",
                 "timeout": 60,
-                "enabled": False  # Requires API key
+                "enabled": False,  # Requires API key
             },
             "azure_tts": {
                 "url": "https://eastus.tts.speech.microsoft.com/cognitiveservices/v1",
                 "timeout": 30,
-                "enabled": False  # Requires API key
-            }
+                "enabled": False,  # Requires API key
+            },
         }
-        
+
         # Initialize pygame for audio playback if available
         if ENHANCED_AVAILABLE:
             try:
@@ -146,7 +147,7 @@ class VoiceGenerator:
                 "volume": 0.8,
                 "pitch": 1.1,
                 "description": "Soft, warm, and intimate voice",
-                "characteristics": ["gentle", "warm", "intimate", "smooth"]
+                "characteristics": ["gentle", "warm", "intimate", "smooth"],
             },
             "seductive": {
                 "voice_id": "female_seductive",
@@ -154,7 +155,7 @@ class VoiceGenerator:
                 "volume": 0.9,
                 "pitch": 1.2,
                 "description": "Alluring and captivating voice",
-                "characteristics": ["alluring", "captivating", "magnetic", "smooth"]
+                "characteristics": ["alluring", "captivating", "magnetic", "smooth"],
             },
             "confident": {
                 "voice_id": "female_confident",
@@ -162,7 +163,7 @@ class VoiceGenerator:
                 "volume": 0.9,
                 "pitch": 1.0,
                 "description": "Strong and self-assured voice",
-                "characteristics": ["strong", "assured", "clear", "authoritative"]
+                "characteristics": ["strong", "assured", "clear", "authoritative"],
             },
             "playful": {
                 "voice_id": "female_playful",
@@ -170,7 +171,7 @@ class VoiceGenerator:
                 "volume": 0.8,
                 "pitch": 1.3,
                 "description": "Light and cheerful voice",
-                "characteristics": ["cheerful", "light", "energetic", "fun"]
+                "characteristics": ["cheerful", "light", "energetic", "fun"],
             },
             "mysterious": {
                 "voice_id": "female_mysterious",
@@ -178,7 +179,12 @@ class VoiceGenerator:
                 "volume": 0.7,
                 "pitch": 0.9,
                 "description": "Enigmatic and intriguing voice",
-                "characteristics": ["enigmatic", "intriguing", "whispery", "mysterious"]
+                "characteristics": [
+                    "enigmatic",
+                    "intriguing",
+                    "whispery",
+                    "mysterious",
+                ],
             },
             "nurturing": {
                 "voice_id": "female_nurturing",
@@ -186,7 +192,7 @@ class VoiceGenerator:
                 "volume": 0.8,
                 "pitch": 1.0,
                 "description": "Caring and supportive voice",
-                "characteristics": ["caring", "supportive", "warm", "gentle"]
+                "characteristics": ["caring", "supportive", "warm", "gentle"],
             },
             "default": {
                 "voice_id": "default",
@@ -194,8 +200,8 @@ class VoiceGenerator:
                 "volume": 0.8,
                 "pitch": 1.0,
                 "description": "Standard voice",
-                "characteristics": ["clear", "neutral", "professional"]
-            }
+                "characteristics": ["clear", "neutral", "professional"],
+            },
         }
 
     def generate_voice(self, text: str, voice_style: str = "narrator") -> str:
@@ -209,7 +215,7 @@ class VoiceGenerator:
                 result = self.generate_voice_with_pyttsx3(enhanced_text, "default")
                 if result.get("success"):
                     return result["audio_path"]
-            
+
             # Fallback to basic generation
             audio_path = self._generate_voice_placeholder(enhanced_text, voice_style)
             logger.info(f"✅ Generated voice: {audio_path}")
@@ -231,25 +237,25 @@ class VoiceGenerator:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"generated_voice_{voice_style}_{timestamp}.wav"
         audio_path = self.output_dir / filename
-        
+
         # Create a simple placeholder audio file
         # This is a minimal implementation - in practice you'd use a TTS library
-        with open(audio_path, 'wb') as f:
+        with open(audio_path, "wb") as f:
             # Write a minimal WAV header
-            f.write(b'RIFF')
-            f.write((36).to_bytes(4, 'little'))
-            f.write(b'WAVE')
-            f.write(b'fmt ')
-            f.write((16).to_bytes(4, 'little'))
-            f.write((1).to_bytes(2, 'little'))  # PCM
-            f.write((1).to_bytes(2, 'little'))  # Mono
-            f.write((22050).to_bytes(4, 'little'))  # Sample rate
-            f.write((44100).to_bytes(4, 'little'))  # Byte rate
-            f.write((2).to_bytes(2, 'little'))  # Block align
-            f.write((16).to_bytes(2, 'little'))  # Bits per sample
-            f.write(b'data')
-            f.write((0).to_bytes(4, 'little'))  # Data size
-        
+            f.write(b"RIFF")
+            f.write((36).to_bytes(4, "little"))
+            f.write(b"WAVE")
+            f.write(b"fmt ")
+            f.write((16).to_bytes(4, "little"))
+            f.write((1).to_bytes(2, "little"))  # PCM
+            f.write((1).to_bytes(2, "little"))  # Mono
+            f.write((22050).to_bytes(4, "little"))  # Sample rate
+            f.write((44100).to_bytes(4, "little"))  # Byte rate
+            f.write((2).to_bytes(2, "little"))  # Block align
+            f.write((16).to_bytes(2, "little"))  # Bits per sample
+            f.write(b"data")
+            f.write((0).to_bytes(4, "little"))  # Data size
+
         return str(audio_path)
 
     def narrate_chapter(
@@ -266,27 +272,38 @@ class VoiceGenerator:
         try:
             # Try to get character profile from embodiment engine if available
             character_profile = None
-            if hasattr(self.framework, 'plugins') and 'character_embodiment_engine' in self.framework.plugins:
+            if (
+                hasattr(self.framework, "plugins")
+                and "character_embodiment_engine" in self.framework.plugins
+            ):
                 try:
-                    character_profile = self.framework.plugins['character_embodiment_engine'].get_character_profile(character_name)
+                    character_profile = self.framework.plugins[
+                        "character_embodiment_engine"
+                    ].get_character_profile(character_name)
                 except:
                     pass
-            
+
             # Determine voice style based on character profile or personality
-            voice_style = self._determine_character_voice_style(character_profile or character_personality)
-            
+            voice_style = self._determine_character_voice_style(
+                character_profile or character_personality
+            )
+
             # Enhance dialogue with character traits
-            enhanced_dialogue = self._enhance_dialogue_with_character_traits(dialogue, character_profile)
-            
+            enhanced_dialogue = self._enhance_dialogue_with_character_traits(
+                dialogue, character_profile
+            )
+
             # Generate voice using enhanced capabilities
             if ENHANCED_AVAILABLE:
-                result = self.generate_voice_with_pyttsx3(enhanced_dialogue, voice_style)
+                result = self.generate_voice_with_pyttsx3(
+                    enhanced_dialogue, voice_style
+                )
                 if result.get("success"):
                     return result["audio_path"]
-            
+
             # Fallback to basic generation
             return self.generate_voice(enhanced_dialogue, voice_style)
-            
+
         except Exception as e:
             logger.error(f"❌ Failed to generate character voice: {e}")
             return f"Character voice generation failed: {e}"
@@ -295,10 +312,10 @@ class VoiceGenerator:
         """Determine voice style based on character profile"""
         if not character_profile:
             return "default"
-        
+
         # Extract personality traits
         personality = str(character_profile).lower()
-        
+
         # Map personality traits to voice styles
         if any(trait in personality for trait in ["romantic", "seductive", "intimate"]):
             return "romantic"
@@ -319,13 +336,13 @@ class VoiceGenerator:
         """Enhance dialogue with character-specific voice patterns"""
         if not character_profile:
             return dialogue
-        
+
         # Extract character traits
         personality = str(character_profile).lower()
-        
+
         # Add voice pattern indicators
         enhanced_dialogue = dialogue
-        
+
         if "romantic" in personality or "seductive" in personality:
             enhanced_dialogue = f"[Soft, intimate tone] {dialogue}"
         elif "confident" in personality or "strong" in personality:
@@ -336,7 +353,7 @@ class VoiceGenerator:
             enhanced_dialogue = f"[Mysterious, whispery tone] {dialogue}"
         elif "nurturing" in personality or "caring" in personality:
             enhanced_dialogue = f"[Warm, caring tone] {dialogue}"
-        
+
         return enhanced_dialogue
 
     def _determine_voice_style_from_personality(
@@ -345,9 +362,9 @@ class VoiceGenerator:
         """Determine voice style from personality string"""
         if not character_personality:
             return "default"
-        
+
         personality = character_personality.lower()
-        
+
         if any(trait in personality for trait in ["romantic", "seductive"]):
             return "romantic"
         elif any(trait in personality for trait in ["confident", "strong"]):
@@ -370,120 +387,113 @@ class VoiceGenerator:
     def initialize_pyttsx3(self) -> bool:
         """Initialize pyttsx3 TTS engine"""
         if not ENHANCED_AVAILABLE:
-            logger.warning("Enhanced functionality not available (pyttsx3 not installed)")
+            logger.warning(
+                "Enhanced functionality not available (pyttsx3 not installed)"
+            )
             return False
-        
+
         try:
             self.pyttsx3_engine = pyttsx3.init()
-            
+
             # Get available voices
-            voices = self.pyttsx3_engine.getProperty('voices')
+            voices = self.pyttsx3_engine.getProperty("voices")
             for voice in voices:
                 self.available_voices[voice.id] = {
                     "name": voice.name,
                     "languages": voice.languages,
-                    "gender": voice.gender
+                    "gender": voice.gender,
                 }
-            
+
             logger.info(f"✅ pyttsx3 initialized with {len(voices)} voices")
             return True
-            
+
         except Exception as e:
             logger.error(f"❌ Failed to initialize pyttsx3: {e}")
             return False
 
     def generate_voice_with_pyttsx3(
-        self, 
-        text: str, 
-        voice_preset: str = "default",
-        output_filename: str = None
+        self, text: str, voice_preset: str = "default", output_filename: str = None
     ) -> Dict:
         """Generate voice using pyttsx3"""
         if not ENHANCED_AVAILABLE or not self.pyttsx3_engine:
             return {"success": False, "error": "pyttsx3 not available"}
-        
+
         try:
             # Get voice preset
             preset = self.voice_presets.get(voice_preset, self.voice_presets["default"])
-            
+
             # Set voice properties
-            self.pyttsx3_engine.setProperty('rate', preset["rate"])
-            self.pyttsx3_engine.setProperty('volume', preset["volume"])
-            
+            self.pyttsx3_engine.setProperty("rate", preset["rate"])
+            self.pyttsx3_engine.setProperty("volume", preset["volume"])
+
             # Try to set voice if available
-            voices = self.pyttsx3_engine.getProperty('voices')
+            voices = self.pyttsx3_engine.getProperty("voices")
             if voices:
                 # Try to find a female voice for romantic/seductive presets
                 if voice_preset in ["romantic", "seductive", "nurturing"]:
                     for voice in voices:
                         if "female" in voice.name.lower():
-                            self.pyttsx3_engine.setProperty('voice', voice.id)
+                            self.pyttsx3_engine.setProperty("voice", voice.id)
                             break
                 else:
                     # Use first available voice
-                    self.pyttsx3_engine.setProperty('voice', voices[0].id)
-            
+                    self.pyttsx3_engine.setProperty("voice", voices[0].id)
+
             # Generate filename
             if not output_filename:
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                 output_filename = f"pyttsx3_{voice_preset}_{timestamp}.wav"
-            
+
             audio_path = self.output_dir / output_filename
-            
+
             # Generate speech
             self.pyttsx3_engine.save_to_file(text, str(audio_path))
             self.pyttsx3_engine.runAndWait()
-            
+
             return {
                 "success": True,
                 "audio_path": str(audio_path),
                 "text": text,
                 "voice_preset": voice_preset,
-                "preset": preset
+                "preset": preset,
             }
-            
+
         except Exception as e:
             logger.error(f"❌ pyttsx3 generation failed: {e}")
             return {"success": False, "error": str(e)}
 
     def generate_voice_with_gtts(
-        self, 
-        text: str, 
-        language: str = "en",
-        output_filename: str = None
+        self, text: str, language: str = "en", output_filename: str = None
     ) -> Dict:
         """Generate voice using Google Text-to-Speech"""
         if not ENHANCED_AVAILABLE:
             return {"success": False, "error": "gTTS not available"}
-        
+
         try:
             # Generate filename
             if not output_filename:
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                 output_filename = f"gtts_{language}_{timestamp}.mp3"
-            
+
             audio_path = self.output_dir / output_filename
-            
+
             # Generate speech
             tts = gTTS(text=text, lang=language, slow=False)
             tts.save(str(audio_path))
-            
+
             return {
                 "success": True,
                 "audio_path": str(audio_path),
                 "text": text,
-                "language": language
+                "language": language,
             }
-            
+
         except Exception as e:
             logger.error(f"❌ gTTS generation failed: {e}")
             return {"success": False, "error": str(e)}
 
     def generate_voice_with_api(
-        self, 
-        text: str, 
-        voice_preset: str = "default",
-        api_type: str = "elevenlabs"
+        self, text: str, voice_preset: str = "default", api_type: str = "elevenlabs"
     ) -> Dict:
         """Generate voice using API"""
         if api_type == "elevenlabs":
@@ -514,7 +524,7 @@ class VoiceGenerator:
         """Play audio file using pygame"""
         if not ENHANCED_AVAILABLE:
             return False
-        
+
         try:
             pygame.mixer.music.load(filepath)
             pygame.mixer.music.play()
@@ -530,7 +540,9 @@ class VoiceGenerator:
             "character": list(self.voice_styles["character"].keys()),
             "audiobook": list(self.voice_styles["audiobook"].keys()),
             "enhanced_presets": list(self.voice_presets.keys()),
-            "pyttsx3_voices": list(self.available_voices.keys()) if self.available_voices else []
+            "pyttsx3_voices": (
+                list(self.available_voices.keys()) if self.available_voices else []
+            ),
         }
 
     def get_engine_status(self) -> Dict:
@@ -542,7 +554,7 @@ class VoiceGenerator:
             "pygame_available": ENHANCED_AVAILABLE,
             "elevenlabs_api": self.api_configs["elevenlabs"]["enabled"],
             "openai_tts_api": self.api_configs["openai_tts"]["enabled"],
-            "azure_tts_api": self.api_configs["azure_tts"]["enabled"]
+            "azure_tts_api": self.api_configs["azure_tts"]["enabled"],
         }
 
     def test_api_connection(self, api_type: str = "elevenlabs") -> Dict:
@@ -552,4 +564,4 @@ class VoiceGenerator:
 
 def initialize(framework) -> VoiceGenerator:
     """Initialize the merged voice generator plugin"""
-    return VoiceGenerator(framework) 
+    return VoiceGenerator(framework)

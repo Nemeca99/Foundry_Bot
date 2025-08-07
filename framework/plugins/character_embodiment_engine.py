@@ -13,6 +13,7 @@ from datetime import datetime, timedelta
 from dataclasses import dataclass, field
 from enum import Enum
 import random
+from queue_manager import QueueProcessor
 
 logger = logging.getLogger(__name__)
 
@@ -45,10 +46,11 @@ class CharacterProfile:
     weaknesses: List[str] = field(default_factory=list)
 
 
-class CharacterEmbodimentEngine:
+class CharacterEmbodimentEngine(QueueProcessor):
     """Engine that transforms AI from knowing about characters to BEING characters"""
 
     def __init__(self, framework=None):
+        super().__init__("character_embodiment_engine")
         self.framework = framework
         from core.config import Config
 

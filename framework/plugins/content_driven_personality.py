@@ -6,6 +6,7 @@ Allows AI personality to evolve based on consumed content
 
 import re
 import json
+import sys
 from pathlib import Path
 from typing import Dict, List, Any, Optional
 from dataclasses import dataclass, asdict
@@ -13,6 +14,12 @@ from enum import Enum
 import logging
 
 from core.config import Config
+
+# Add framework to path
+framework_dir = Path(__file__).parent.parent
+sys.path.insert(0, str(framework_dir))
+
+from queue_manager import QueueProcessor
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -63,13 +70,14 @@ class PersonalityEvolution:
     content_influence: Dict[str, float]
 
 
-class ContentDrivenPersonality:
+class ContentDrivenPersonality(QueueProcessor):
     """
     Content-Driven Personality Engine
     Analyzes content to extract personality traits and evolve AI personality
     """
 
     def __init__(self):
+        super().__init__("content_driven_personality")
         self.config = Config()
         # Use the current file's location to determine project root
         project_root = Path(__file__).parent.parent.parent
@@ -559,6 +567,138 @@ class ContentDrivenPersonality:
                 response_parts.append(f"- {trait}: +{influence:.2f}")
 
         return "\n".join(response_parts)
+
+    def _process_item(self, item):
+        """Process queue items for content driven personality operations"""
+        try:
+            # Extract operation type from data
+            operation_type = item.data.get("type", "unknown")
+            
+            if operation_type == "analyze_content_for_personality":
+                return self._handle_analyze_content_for_personality(item.data)
+            elif operation_type == "evolve_personality_from_content":
+                return self._handle_evolve_personality_from_content(item.data)
+            elif operation_type == "get_current_personality":
+                return self._handle_get_current_personality(item.data)
+            elif operation_type == "get_personality_summary":
+                return self._handle_get_personality_summary(item.data)
+            elif operation_type == "get_evolution_history":
+                return self._handle_get_evolution_history(item.data)
+            elif operation_type == "reset_personality":
+                return self._handle_reset_personality(item.data)
+            elif operation_type == "become_living_manual":
+                return self._handle_become_living_manual(item.data)
+            else:
+                # Pass unknown types to base class
+                return super()._process_item(item)
+        except Exception as e:
+            logger.error(f"Error processing content driven personality queue item: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_analyze_content_for_personality(self, data):
+        """Handle content personality analysis requests"""
+        try:
+            content = data.get("content", "")
+            content_id = data.get("content_id", "")
+            
+            if content:
+                personality = self.analyze_content_for_personality(content, content_id)
+                return {
+                    "status": "success",
+                    "personality": personality,
+                    "content_id": content_id
+                }
+            else:
+                return {"error": "Missing content", "status": "failed"}
+        except Exception as e:
+            logger.error(f"Error in analyze content for personality: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_evolve_personality_from_content(self, data):
+        """Handle personality evolution requests"""
+        try:
+            content = data.get("content", "")
+            content_id = data.get("content_id", "")
+            
+            if content:
+                evolution = self.evolve_personality_from_content(content, content_id)
+                return {
+                    "status": "success",
+                    "evolution": evolution,
+                    "content_id": content_id
+                }
+            else:
+                return {"error": "Missing content", "status": "failed"}
+        except Exception as e:
+            logger.error(f"Error in evolve personality from content: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_get_current_personality(self, data):
+        """Handle get current personality requests"""
+        try:
+            personality = self.get_current_personality()
+            return {
+                "status": "success",
+                "personality": personality
+            }
+        except Exception as e:
+            logger.error(f"Error in get current personality: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_get_personality_summary(self, data):
+        """Handle get personality summary requests"""
+        try:
+            summary = self.get_personality_summary()
+            return {
+                "status": "success",
+                "summary": summary
+            }
+        except Exception as e:
+            logger.error(f"Error in get personality summary: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_get_evolution_history(self, data):
+        """Handle get evolution history requests"""
+        try:
+            history = self.get_evolution_history()
+            return {
+                "status": "success",
+                "history": history
+            }
+        except Exception as e:
+            logger.error(f"Error in get evolution history: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_reset_personality(self, data):
+        """Handle reset personality requests"""
+        try:
+            self.reset_personality()
+            return {
+                "status": "success",
+                "message": "Personality reset successfully"
+            }
+        except Exception as e:
+            logger.error(f"Error in reset personality: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_become_living_manual(self, data):
+        """Handle become living manual requests"""
+        try:
+            content = data.get("content", "")
+            content_id = data.get("content_id", "")
+            
+            if content:
+                manual = self.become_living_manual(content, content_id)
+                return {
+                    "status": "success",
+                    "manual": manual,
+                    "content_id": content_id
+                }
+            else:
+                return {"error": "Missing content", "status": "failed"}
+        except Exception as e:
+            logger.error(f"Error in become living manual: {e}")
+            return {"error": str(e), "status": "failed"}
 
 
 def initialize(framework=None):

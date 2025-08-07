@@ -6,6 +6,7 @@ Provides character-to-character interaction systems, dialogue generation, and re
 
 import re
 import json
+import sys
 from pathlib import Path
 from typing import Dict, List, Any, Optional, Tuple
 from dataclasses import dataclass, asdict
@@ -15,6 +16,12 @@ from datetime import datetime
 import random
 
 from core.config import Config
+
+# Add framework to path
+framework_dir = Path(__file__).parent.parent
+sys.path.insert(0, str(framework_dir))
+
+from queue_manager import QueueProcessor
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -86,21 +93,22 @@ class CharacterDialogueProfile:
     interaction_style: str
 
 
-class CharacterInteractionEngine:
+class CharacterInteractionEngine(QueueProcessor):
     """
     Character Interaction Engine
     Provides character-to-character interaction and dialogue generation
     """
 
     def __init__(self):
+        super().__init__("character_interaction_engine")
         self.config = Config()
         # Use the current file's location to determine project root
         project_root = Path(__file__).parent.parent.parent
         self.interaction_data_dir = project_root / "models" / "interaction"
         self.interaction_data_dir.mkdir(parents=True, exist_ok=True)
 
-        self.character_interactions = []
-        self.character_dialogue_profiles = {}
+        self.character_interactions = {}
+        self.dialogue_profiles = {}
         self.interaction_templates = {}
 
         # Load existing interaction data
@@ -661,6 +669,352 @@ class CharacterInteractionEngine:
         self.interaction_templates = {}
         self._save_interaction_data()
         logger.info("Reset all interaction data")
+
+    def _process_item(self, item):
+        """Process queue items for character interaction engine operations"""
+        try:
+            # Extract operation type from data
+            operation_type = item.data.get("type", "unknown")
+            
+            if operation_type == "create_dialogue_profile":
+                return self._handle_create_dialogue_profile(item.data)
+            elif operation_type == "generate_dialogue":
+                return self._handle_generate_dialogue(item.data)
+            elif operation_type == "create_interaction":
+                return self._handle_create_interaction(item.data)
+            elif operation_type == "generate_interaction_sequence":
+                return self._handle_generate_interaction_sequence(item.data)
+            elif operation_type == "get_character_interactions":
+                return self._handle_get_character_interactions(item.data)
+            elif operation_type == "get_dialogue_profile":
+                return self._handle_get_dialogue_profile(item.data)
+            elif operation_type == "update_dialogue_profile":
+                return self._handle_update_dialogue_profile(item.data)
+            elif operation_type == "get_interaction_summary":
+                return self._handle_get_interaction_summary(item.data)
+            elif operation_type == "get_relationship_dynamics":
+                return self._handle_get_relationship_dynamics(item.data)
+            elif operation_type == "reset_character_interactions":
+                return self._handle_reset_character_interactions(item.data)
+            elif operation_type == "reset_all_interactions":
+                return self._handle_reset_all_interactions(item.data)
+            else:
+                # Pass unknown types to base class
+                return super()._process_item(item)
+        except Exception as e:
+            logger.error(f"Error processing character interaction engine queue item: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_create_dialogue_profile(self, data):
+        """Handle create dialogue profile requests"""
+        try:
+            character_name = data.get("character_name", "")
+            speech_patterns = data.get("speech_patterns", {})
+            vocabulary_preferences = data.get("vocabulary_preferences", [])
+            emotional_expressions = data.get("emotional_expressions", {})
+            interaction_style = data.get("interaction_style", "neutral")
+            
+            if character_name:
+                profile = self.create_character_dialogue_profile(
+                    character_name, speech_patterns, vocabulary_preferences, emotional_expressions, interaction_style
+                )
+                return {
+                    "status": "success",
+                    "profile": profile,
+                    "character_name": character_name
+                }
+            else:
+                return {"error": "Missing character_name", "status": "failed"}
+        except Exception as e:
+            logger.error(f"Error in create dialogue profile: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_generate_dialogue(self, data):
+        """Handle generate dialogue requests"""
+        try:
+            speaker = data.get("speaker", "")
+            listener = data.get("listener", "")
+            interaction_type = data.get("interaction_type", "")
+            emotion = data.get("emotion", "calm")
+            context = data.get("context", {})
+            
+            if speaker and listener and interaction_type:
+                if interaction_type == "conversation":
+                    int_type = InteractionType.CONVERSATION
+                elif interaction_type == "conflict":
+                    int_type = InteractionType.CONFLICT
+                elif interaction_type == "collaboration":
+                    int_type = InteractionType.COLLABORATION
+                elif interaction_type == "romance":
+                    int_type = InteractionType.ROMANCE
+                elif interaction_type == "friendship":
+                    int_type = InteractionType.FRIENDSHIP
+                elif interaction_type == "mentorship":
+                    int_type = InteractionType.MENTORSHIP
+                elif interaction_type == "rivalry":
+                    int_type = InteractionType.RIVALRY
+                else:
+                    int_type = InteractionType.CONVERSATION
+                
+                if emotion == "happy":
+                    emo = DialogueEmotion.HAPPY
+                elif emotion == "sad":
+                    emo = DialogueEmotion.SAD
+                elif emotion == "angry":
+                    emo = DialogueEmotion.ANGRY
+                elif emotion == "excited":
+                    emo = DialogueEmotion.EXCITED
+                elif emotion == "calm":
+                    emo = DialogueEmotion.CALM
+                elif emotion == "nervous":
+                    emo = DialogueEmotion.NERVOUS
+                elif emotion == "confident":
+                    emo = DialogueEmotion.CONFIDENT
+                elif emotion == "vulnerable":
+                    emo = DialogueEmotion.VULNERABLE
+                elif emotion == "playful":
+                    emo = DialogueEmotion.PLAYFUL
+                elif emotion == "serious":
+                    emo = DialogueEmotion.SERIOUS
+                elif emotion == "supportive":
+                    emo = DialogueEmotion.SUPPORTIVE
+                else:
+                    emo = DialogueEmotion.CALM
+                
+                dialogue = self.generate_dialogue(speaker, listener, int_type, emo, context)
+                return {
+                    "status": "success",
+                    "dialogue": dialogue,
+                    "speaker": speaker,
+                    "listener": listener
+                }
+            else:
+                return {"error": "Missing required parameters", "status": "failed"}
+        except Exception as e:
+            logger.error(f"Error in generate dialogue: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_create_interaction(self, data):
+        """Handle create interaction requests"""
+        try:
+            interaction_type = data.get("interaction_type", "")
+            participants = data.get("participants", [])
+            dialogue_lines = data.get("dialogue_lines", [])
+            emotional_intensity = data.get("emotional_intensity", 0.5)
+            context = data.get("context", {})
+            
+            if interaction_type and participants:
+                if interaction_type == "conversation":
+                    int_type = InteractionType.CONVERSATION
+                elif interaction_type == "conflict":
+                    int_type = InteractionType.CONFLICT
+                elif interaction_type == "collaboration":
+                    int_type = InteractionType.COLLABORATION
+                elif interaction_type == "romance":
+                    int_type = InteractionType.ROMANCE
+                elif interaction_type == "friendship":
+                    int_type = InteractionType.FRIENDSHIP
+                elif interaction_type == "mentorship":
+                    int_type = InteractionType.MENTORSHIP
+                elif interaction_type == "rivalry":
+                    int_type = InteractionType.RIVALRY
+                else:
+                    int_type = InteractionType.CONVERSATION
+                
+                interaction = self.create_interaction(int_type, participants, dialogue_lines, emotional_intensity, context)
+                return {
+                    "status": "success",
+                    "interaction": interaction,
+                    "interaction_type": interaction_type
+                }
+            else:
+                return {"error": "Missing interaction_type or participants", "status": "failed"}
+        except Exception as e:
+            logger.error(f"Error in create interaction: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_generate_interaction_sequence(self, data):
+        """Handle generate interaction sequence requests"""
+        try:
+            character_a = data.get("character_a", "")
+            character_b = data.get("character_b", "")
+            interaction_type = data.get("interaction_type", "")
+            num_exchanges = data.get("num_exchanges", 3)
+            
+            if character_a and character_b and interaction_type:
+                if interaction_type == "conversation":
+                    int_type = InteractionType.CONVERSATION
+                elif interaction_type == "conflict":
+                    int_type = InteractionType.CONFLICT
+                elif interaction_type == "collaboration":
+                    int_type = InteractionType.COLLABORATION
+                elif interaction_type == "romance":
+                    int_type = InteractionType.ROMANCE
+                elif interaction_type == "friendship":
+                    int_type = InteractionType.FRIENDSHIP
+                elif interaction_type == "mentorship":
+                    int_type = InteractionType.MENTORSHIP
+                elif interaction_type == "rivalry":
+                    int_type = InteractionType.RIVALRY
+                else:
+                    int_type = InteractionType.CONVERSATION
+                
+                sequence = self.generate_interaction_sequence(character_a, character_b, int_type, num_exchanges)
+                return {
+                    "status": "success",
+                    "sequence": sequence,
+                    "character_a": character_a,
+                    "character_b": character_b
+                }
+            else:
+                return {"error": "Missing required parameters", "status": "failed"}
+        except Exception as e:
+            logger.error(f"Error in generate interaction sequence: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_get_character_interactions(self, data):
+        """Handle get character interactions requests"""
+        try:
+            character_name = data.get("character_name", "")
+            interaction_type = data.get("interaction_type", "")
+            
+            if character_name:
+                if interaction_type:
+                    if interaction_type == "conversation":
+                        int_type = InteractionType.CONVERSATION
+                    elif interaction_type == "conflict":
+                        int_type = InteractionType.CONFLICT
+                    elif interaction_type == "collaboration":
+                        int_type = InteractionType.COLLABORATION
+                    elif interaction_type == "romance":
+                        int_type = InteractionType.ROMANCE
+                    elif interaction_type == "friendship":
+                        int_type = InteractionType.FRIENDSHIP
+                    elif interaction_type == "mentorship":
+                        int_type = InteractionType.MENTORSHIP
+                    elif interaction_type == "rivalry":
+                        int_type = InteractionType.RIVALRY
+                    else:
+                        int_type = None
+                else:
+                    int_type = None
+                
+                interactions = self.get_character_interactions(character_name, int_type)
+                return {
+                    "status": "success",
+                    "interactions": interactions,
+                    "character_name": character_name
+                }
+            else:
+                return {"error": "Missing character_name", "status": "failed"}
+        except Exception as e:
+            logger.error(f"Error in get character interactions: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_get_dialogue_profile(self, data):
+        """Handle get dialogue profile requests"""
+        try:
+            character_name = data.get("character_name", "")
+            if character_name:
+                profile = self.get_dialogue_profile(character_name)
+                return {
+                    "status": "success",
+                    "profile": profile,
+                    "character_name": character_name
+                }
+            else:
+                return {"error": "Missing character_name", "status": "failed"}
+        except Exception as e:
+            logger.error(f"Error in get dialogue profile: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_update_dialogue_profile(self, data):
+        """Handle update dialogue profile requests"""
+        try:
+            character_name = data.get("character_name", "")
+            speech_patterns = data.get("speech_patterns", {})
+            vocabulary_preferences = data.get("vocabulary_preferences", [])
+            emotional_expressions = data.get("emotional_expressions", {})
+            interaction_style = data.get("interaction_style", "")
+            
+            if character_name:
+                self.update_dialogue_profile(character_name, speech_patterns, vocabulary_preferences, emotional_expressions, interaction_style)
+                return {
+                    "status": "success",
+                    "message": f"Dialogue profile updated for {character_name}",
+                    "character_name": character_name
+                }
+            else:
+                return {"error": "Missing character_name", "status": "failed"}
+        except Exception as e:
+            logger.error(f"Error in update dialogue profile: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_get_interaction_summary(self, data):
+        """Handle get interaction summary requests"""
+        try:
+            character_name = data.get("character_name", "")
+            if character_name:
+                summary = self.get_interaction_summary(character_name)
+                return {
+                    "status": "success",
+                    "summary": summary,
+                    "character_name": character_name
+                }
+            else:
+                return {"error": "Missing character_name", "status": "failed"}
+        except Exception as e:
+            logger.error(f"Error in get interaction summary: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_get_relationship_dynamics(self, data):
+        """Handle get relationship dynamics requests"""
+        try:
+            character_a = data.get("character_a", "")
+            character_b = data.get("character_b", "")
+            
+            if character_a and character_b:
+                dynamics = self.get_relationship_dynamics(character_a, character_b)
+                return {
+                    "status": "success",
+                    "dynamics": dynamics,
+                    "character_a": character_a,
+                    "character_b": character_b
+                }
+            else:
+                return {"error": "Missing character_a or character_b", "status": "failed"}
+        except Exception as e:
+            logger.error(f"Error in get relationship dynamics: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_reset_character_interactions(self, data):
+        """Handle reset character interactions requests"""
+        try:
+            character_name = data.get("character_name", "")
+            if character_name:
+                self.reset_character_interactions(character_name)
+                return {
+                    "status": "success",
+                    "message": f"Interactions reset for {character_name}",
+                    "character_name": character_name
+                }
+            else:
+                return {"error": "Missing character_name", "status": "failed"}
+        except Exception as e:
+            logger.error(f"Error in reset character interactions: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_reset_all_interactions(self, data):
+        """Handle reset all interactions requests"""
+        try:
+            self.reset_all_interactions()
+            return {
+                "status": "success",
+                "message": "All interactions reset"
+            }
+        except Exception as e:
+            logger.error(f"Error in reset all interactions: {e}")
+            return {"error": str(e), "status": "failed"}
 
 
 def initialize(framework=None):

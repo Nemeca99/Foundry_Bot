@@ -7,12 +7,19 @@ Transforms content processing from "This is about" to "I AM" identity
 import json
 import logging
 import re
+import sys
 from pathlib import Path
 from typing import Dict, List, Any, Optional, Tuple
 from datetime import datetime
 from dataclasses import dataclass, field
 from enum import Enum
 import random
+
+# Add framework to path
+framework_dir = Path(__file__).parent.parent
+sys.path.insert(0, str(framework_dir))
+
+from queue_manager import QueueProcessor
 
 logger = logging.getLogger(__name__)
 
@@ -46,10 +53,11 @@ class IdentityProfile:
     identity_phrases: List[str] = field(default_factory=list)
 
 
-class IdentityProcessor:
+class IdentityProcessor(QueueProcessor):
     """Processor that transforms content from 'knowing about' to 'I AM' identity"""
 
     def __init__(self, framework=None):
+        super().__init__("identity_processor")
         self.framework = framework
         from core.config import Config
 
@@ -120,7 +128,165 @@ class IdentityProcessor:
         # Load existing identity profiles
         self._load_identity_profiles()
 
-        logger.info("✅ Identity Processor plugin initialized")
+    def _process_item(self, item):
+        """Process queue items for identity processing operations"""
+        try:
+            # Extract operation type from data
+            operation_type = item.data.get("type", "unknown")
+            
+            if operation_type == "transform_content":
+                return self._handle_transform_content(item.data)
+            elif operation_type == "extract_identity":
+                return self._handle_extract_identity(item.data)
+            elif operation_type == "process_content_as_identity":
+                return self._handle_process_content_as_identity(item.data)
+            elif operation_type == "deactivate_identity":
+                return self._handle_deactivate_identity(item.data)
+            elif operation_type == "get_active_identities":
+                return self._handle_get_active_identities(item.data)
+            elif operation_type == "get_identity_profile":
+                return self._handle_get_identity_profile(item.data)
+            elif operation_type == "get_identity_stats":
+                return self._handle_get_identity_stats(item.data)
+            else:
+                # Pass unknown types to base class
+                return super()._process_item(item)
+        except Exception as e:
+            logger.error(f"Error processing identity processor queue item: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_transform_content(self, data):
+        """Handle content transformation requests"""
+        try:
+            character_name = data.get("character_name", "")
+            content = data.get("content", "")
+            transformation_type = data.get("transformation_type", "full_identity")
+            
+            if character_name and content:
+                if transformation_type == "full_identity":
+                    transform_enum = IdentityTransformationType.FULL_IDENTITY
+                elif transformation_type == "partial_identity":
+                    transform_enum = IdentityTransformationType.PARTIAL_IDENTITY
+                elif transformation_type == "voice_identity":
+                    transform_enum = IdentityTransformationType.VOICE_IDENTITY
+                elif transformation_type == "personality_identity":
+                    transform_enum = IdentityTransformationType.PERSONALITY_IDENTITY
+                else:
+                    transform_enum = IdentityTransformationType.FULL_IDENTITY
+                
+                transformed_content = self.transform_content_to_identity(character_name, content, transform_enum)
+                return {
+                    "status": "success",
+                    "transformed_content": transformed_content,
+                    "character_name": character_name
+                }
+            else:
+                return {"error": "Missing character_name or content", "status": "failed"}
+        except Exception as e:
+            logger.error(f"Error in transform content: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_extract_identity(self, data):
+        """Handle identity extraction requests"""
+        try:
+            character_name = data.get("character_name", "")
+            content = data.get("content", "")
+            
+            if character_name and content:
+                identity_profile = self.extract_identity_from_content(character_name, content)
+                return {
+                    "status": "success",
+                    "identity_profile": identity_profile,
+                    "character_name": character_name
+                }
+            else:
+                return {"error": "Missing character_name or content", "status": "failed"}
+        except Exception as e:
+            logger.error(f"Error in extract identity: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_process_content_as_identity(self, data):
+        """Handle process content as identity requests"""
+        try:
+            character_name = data.get("character_name", "")
+            content = data.get("content", "")
+            transformation_type = data.get("transformation_type", "full_identity")
+            
+            if character_name and content:
+                if transformation_type == "full_identity":
+                    transform_enum = IdentityTransformationType.FULL_IDENTITY
+                else:
+                    transform_enum = IdentityTransformationType.FULL_IDENTITY
+                
+                result = self.process_content_as_identity(character_name, content, transform_enum)
+                return {
+                    "status": "success",
+                    "result": result,
+                    "character_name": character_name
+                }
+            else:
+                return {"error": "Missing character_name or content", "status": "failed"}
+        except Exception as e:
+            logger.error(f"Error in process content as identity: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_deactivate_identity(self, data):
+        """Handle identity deactivation requests"""
+        try:
+            character_name = data.get("character_name", "")
+            if character_name:
+                result = self.deactivate_identity(character_name)
+                return {
+                    "status": "success",
+                    "result": result,
+                    "character_name": character_name
+                }
+            else:
+                return {"error": "Missing character_name", "status": "failed"}
+        except Exception as e:
+            logger.error(f"Error in deactivate identity: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_get_active_identities(self, data):
+        """Handle get active identities requests"""
+        try:
+            active_identities = self.get_active_identities()
+            return {
+                "status": "success",
+                "active_identities": active_identities
+            }
+        except Exception as e:
+            logger.error(f"Error in get active identities: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_get_identity_profile(self, data):
+        """Handle get identity profile requests"""
+        try:
+            character_name = data.get("character_name", "")
+            if character_name:
+                profile = self.get_identity_profile(character_name)
+                return {
+                    "status": "success",
+                    "profile": profile,
+                    "character_name": character_name
+                }
+            else:
+                return {"error": "Missing character_name", "status": "failed"}
+        except Exception as e:
+            logger.error(f"Error in get identity profile: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_get_identity_stats(self, data):
+        """Handle get identity stats requests"""
+        try:
+            stats = self.get_identity_stats()
+            return {
+                "status": "success",
+                "stats": stats
+            }
+        except Exception as e:
+            logger.error(f"Error in get identity stats: {e}")
+            return {"error": str(e), "status": "failed"}
 
     def _load_identity_profiles(self):
         """Load existing identity profiles from disk"""

@@ -51,6 +51,7 @@ try:
     import torch
     from diffusers import StableDiffusionPipeline, DPMSolverMultistepScheduler
     import numpy as np
+
     ENHANCED_AVAILABLE = True
 except ImportError:
     ENHANCED_AVAILABLE = False
@@ -74,19 +75,19 @@ class ImageGenerator:
         self.stable_diffusion = None
         self.model_cache = {}
         self.style_presets = self._initialize_style_presets()
-        
+
         # API configurations
         self.api_configs = {
             "stable_diffusion": {
                 "url": "http://localhost:7860",
                 "timeout": 30,
-                "enabled": True
+                "enabled": True,
             },
             "openai_dalle": {
                 "url": "https://api.openai.com/v1/images/generations",
                 "timeout": 60,
-                "enabled": False  # Requires API key
-            }
+                "enabled": False,  # Requires API key
+            },
         }
 
         logger.info("✅ Merged Image Generator plugin initialized")
@@ -128,50 +129,50 @@ class ImageGenerator:
                 "prompt_modifier": "romantic, soft lighting, intimate, beautiful, high quality, detailed",
                 "negative_prompt": "ugly, blurry, low quality, distorted",
                 "guidance_scale": 7.5,
-                "num_inference_steps": 50
+                "num_inference_steps": 50,
             },
             "fantasy": {
                 "prompt_modifier": "fantasy, magical, mystical, detailed, high quality, artistic",
                 "negative_prompt": "realistic, mundane, blurry, low quality",
                 "guidance_scale": 8.0,
-                "num_inference_steps": 50
+                "num_inference_steps": 50,
             },
             "modern": {
                 "prompt_modifier": "modern, contemporary, clean, high quality, detailed, professional",
                 "negative_prompt": "vintage, old, blurry, low quality",
                 "guidance_scale": 7.0,
-                "num_inference_steps": 40
+                "num_inference_steps": 40,
             },
             "vintage": {
                 "prompt_modifier": "vintage, retro, classic, detailed, high quality, nostalgic",
                 "negative_prompt": "modern, contemporary, blurry, low quality",
                 "guidance_scale": 7.5,
-                "num_inference_steps": 50
+                "num_inference_steps": 50,
             },
             "anime": {
                 "prompt_modifier": "anime style, colorful, detailed, high quality, stylized",
                 "negative_prompt": "realistic, blurry, low quality, distorted",
                 "guidance_scale": 8.5,
-                "num_inference_steps": 50
+                "num_inference_steps": 50,
             },
             "realistic": {
                 "prompt_modifier": "photorealistic, detailed, high quality, sharp focus",
                 "negative_prompt": "cartoon, anime, blurry, low quality",
                 "guidance_scale": 7.0,
-                "num_inference_steps": 40
+                "num_inference_steps": 40,
             },
             "artistic": {
                 "prompt_modifier": "artistic, creative, beautiful, detailed, high quality, masterpiece",
                 "negative_prompt": "ugly, blurry, low quality, amateur",
                 "guidance_scale": 8.0,
-                "num_inference_steps": 50
+                "num_inference_steps": 50,
             },
             "default": {
                 "prompt_modifier": "high quality, detailed, beautiful",
                 "negative_prompt": "ugly, blurry, low quality",
                 "guidance_scale": 7.5,
-                "num_inference_steps": 50
-            }
+                "num_inference_steps": 50,
+            },
         }
 
     def generate_image(self, prompt: str, style: str = "book_cover") -> str:
@@ -182,10 +183,12 @@ class ImageGenerator:
 
             # Try enhanced generation first, fallback to basic
             if ENHANCED_AVAILABLE and self.api_configs["stable_diffusion"]["enabled"]:
-                result = self.generate_image_with_api(enhanced_prompt, style, "stable_diffusion")
+                result = self.generate_image_with_api(
+                    enhanced_prompt, style, "stable_diffusion"
+                )
                 if result.get("success"):
                     return result["image_path"]
-            
+
             # Fallback to basic generation
             image_path = self._generate_image_placeholder(enhanced_prompt, style)
             logger.info(f"✅ Generated image: {image_path}")
@@ -207,17 +210,17 @@ class ImageGenerator:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"generated_image_{style}_{timestamp}.png"
         image_path = self.output_dir / filename
-        
+
         # Create a simple placeholder image
-        img = Image.new('RGB', (512, 512), color='lightblue')
+        img = Image.new("RGB", (512, 512), color="lightblue")
         draw = ImageDraw.Draw(img)
-        
+
         # Add text to placeholder
         try:
             font = ImageFont.load_default()
         except:
             font = None
-        
+
         # Split prompt into lines
         words = prompt.split()
         lines = []
@@ -230,13 +233,13 @@ class ImageGenerator:
                 current_line = word + " "
         if current_line:
             lines.append(current_line.strip())
-        
+
         # Draw text
         y_position = 50
         for line in lines[:5]:  # Limit to 5 lines
-            draw.text((50, y_position), line, fill='black', font=font)
+            draw.text((50, y_position), line, fill="black", font=font)
             y_position += 30
-        
+
         img.save(image_path)
         return str(image_path)
 
@@ -260,60 +263,70 @@ class ImageGenerator:
         return self.generate_image(prompt, "scene_illustration")
 
     # Enhanced functionality methods
-    def load_stable_diffusion_model(self, model_name: str = "runwayml/stable-diffusion-v1-5") -> bool:
+    def load_stable_diffusion_model(
+        self, model_name: str = "runwayml/stable-diffusion-v1-5"
+    ) -> bool:
         """Load Stable Diffusion model locally"""
         if not ENHANCED_AVAILABLE:
-            logger.warning("Enhanced functionality not available (torch/diffusers not installed)")
+            logger.warning(
+                "Enhanced functionality not available (torch/diffusers not installed)"
+            )
             return False
-        
+
         try:
             if model_name not in self.model_cache:
                 logger.info(f"Loading Stable Diffusion model: {model_name}")
                 self.stable_diffusion = StableDiffusionPipeline.from_pretrained(
                     model_name,
-                    torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32
+                    torch_dtype=(
+                        torch.float16 if torch.cuda.is_available() else torch.float32
+                    ),
                 )
-                
+
                 if torch.cuda.is_available():
                     self.stable_diffusion = self.stable_diffusion.to("cuda")
-                
-                self.stable_diffusion.scheduler = DPMSolverMultistepScheduler.from_config(
-                    self.stable_diffusion.scheduler.config
+
+                self.stable_diffusion.scheduler = (
+                    DPMSolverMultistepScheduler.from_config(
+                        self.stable_diffusion.scheduler.config
+                    )
                 )
-                
+
                 self.model_cache[model_name] = self.stable_diffusion
                 logger.info("✅ Stable Diffusion model loaded successfully")
-            
+
             return True
-            
+
         except Exception as e:
             logger.error(f"❌ Failed to load Stable Diffusion model: {e}")
             return False
 
     def generate_image_with_stable_diffusion(
-        self, 
-        prompt: str, 
+        self,
+        prompt: str,
         style: str = "default",
         width: int = 512,
         height: int = 512,
-        seed: Optional[int] = None
+        seed: Optional[int] = None,
     ) -> Dict:
         """Generate image using Stable Diffusion locally"""
         if not ENHANCED_AVAILABLE or not self.stable_diffusion:
             return {"success": False, "error": "Stable Diffusion not available"}
-        
+
         try:
             # Get style preset
             style_preset = self.style_presets.get(style, self.style_presets["default"])
-            
+
             # Enhance prompt
             enhanced_prompt = f"{prompt}, {style_preset['prompt_modifier']}"
-            
+
             # Generate image
-            generator = torch.Generator(device="cuda" if torch.cuda.is_available() else "cpu")
+            generator = torch.Generator(
+                device="cuda" if torch.cuda.is_available() else "cpu"
+            )
             if seed:
                 generator.manual_seed(seed)
-            
+
             image = self.stable_diffusion(
                 prompt=enhanced_prompt,
                 negative_prompt=style_preset["negative_prompt"],
@@ -321,32 +334,29 @@ class ImageGenerator:
                 num_inference_steps=style_preset["num_inference_steps"],
                 width=width,
                 height=height,
-                generator=generator
+                generator=generator,
             ).images[0]
-            
+
             # Save image
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             filename = f"sd_generated_{style}_{timestamp}.png"
             image_path = self.output_dir / filename
             image.save(image_path)
-            
+
             return {
                 "success": True,
                 "image_path": str(image_path),
                 "prompt": enhanced_prompt,
                 "style": style,
-                "seed": seed
+                "seed": seed,
             }
-            
+
         except Exception as e:
             logger.error(f"❌ Stable Diffusion generation failed: {e}")
             return {"success": False, "error": str(e)}
 
     def generate_image_with_api(
-        self, 
-        prompt: str, 
-        style: str = "default",
-        api_type: str = "stable_diffusion"
+        self, prompt: str, style: str = "default", api_type: str = "stable_diffusion"
     ) -> Dict:
         """Generate image using API"""
         if api_type == "stable_diffusion":
@@ -361,42 +371,42 @@ class ImageGenerator:
         try:
             style_preset = self.style_presets.get(style, self.style_presets["default"])
             enhanced_prompt = f"{prompt}, {style_preset['prompt_modifier']}"
-            
+
             payload = {
                 "prompt": enhanced_prompt,
                 "negative_prompt": style_preset["negative_prompt"],
                 "guidance_scale": style_preset["guidance_scale"],
                 "num_inference_steps": style_preset["num_inference_steps"],
                 "width": 512,
-                "height": 512
+                "height": 512,
             }
-            
+
             response = requests.post(
                 f"{self.api_configs['stable_diffusion']['url']}/sdapi/v1/txt2img",
                 json=payload,
-                timeout=self.api_configs["stable_diffusion"]["timeout"]
+                timeout=self.api_configs["stable_diffusion"]["timeout"],
             )
-            
+
             if response.status_code == 200:
                 result = response.json()
                 image_data = base64.b64decode(result["images"][0])
-                
+
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                 filename = f"sd_api_{style}_{timestamp}.png"
                 image_path = self.output_dir / filename
-                
+
                 with open(image_path, "wb") as f:
                     f.write(image_data)
-                
+
                 return {
                     "success": True,
                     "image_path": str(image_path),
                     "prompt": enhanced_prompt,
-                    "style": style
+                    "style": style,
                 }
             else:
                 return {"success": False, "error": f"API error: {response.status_code}"}
-                
+
         except Exception as e:
             logger.error(f"❌ Stable Diffusion API generation failed: {e}")
             return {"success": False, "error": str(e)}
@@ -407,30 +417,21 @@ class ImageGenerator:
         return {"success": False, "error": "DALL-E API not configured"}
 
     def generate_character_portrait(
-        self, 
-        character_name: str, 
-        description: str, 
-        style: str = "romantic"
+        self, character_name: str, description: str, style: str = "romantic"
     ) -> Dict:
         """Generate character portrait with enhanced capabilities"""
         prompt = f"Character portrait of {character_name}: {description}"
         return self.generate_image_with_api(prompt, style, "stable_diffusion")
 
     def generate_story_cover(
-        self, 
-        title: str, 
-        genre: str, 
-        description: str = "",
-        style: str = "artistic"
+        self, title: str, genre: str, description: str = "", style: str = "artistic"
     ) -> Dict:
         """Generate story cover with enhanced capabilities"""
         prompt = f"Book cover for '{title}': {description}"
         return self.generate_image_with_api(prompt, style, "stable_diffusion")
 
     def generate_scene_image(
-        self, 
-        scene_description: str, 
-        style: str = "realistic"
+        self, scene_description: str, style: str = "realistic"
     ) -> Dict:
         """Generate scene image with enhanced capabilities"""
         prompt = f"Scene illustration: {scene_description}"
@@ -442,7 +443,7 @@ class ImageGenerator:
             "book_cover": list(self.image_styles["book_cover"].keys()),
             "character_art": list(self.image_styles["character_art"].keys()),
             "scene_illustration": list(self.image_styles["scene_illustration"].keys()),
-            "enhanced_styles": list(self.style_presets.keys())
+            "enhanced_styles": list(self.style_presets.keys()),
         }
 
     def get_model_status(self) -> Dict:
@@ -452,7 +453,9 @@ class ImageGenerator:
             "stable_diffusion_local": self.stable_diffusion is not None,
             "stable_diffusion_api": self.api_configs["stable_diffusion"]["enabled"],
             "dalle_api": self.api_configs["openai_dalle"]["enabled"],
-            "cuda_available": torch.cuda.is_available() if ENHANCED_AVAILABLE else False
+            "cuda_available": (
+                torch.cuda.is_available() if ENHANCED_AVAILABLE else False
+            ),
         }
 
     def test_api_connection(self, api_type: str = "stable_diffusion") -> Dict:
@@ -461,7 +464,7 @@ class ImageGenerator:
             if api_type == "stable_diffusion":
                 response = requests.get(
                     f"{self.api_configs['stable_diffusion']['url']}/sdapi/v1/progress",
-                    timeout=5
+                    timeout=5,
                 )
                 return {"success": response.status_code == 200}
             else:
@@ -472,4 +475,4 @@ class ImageGenerator:
 
 def initialize(framework) -> ImageGenerator:
     """Initialize the merged image generator plugin"""
-    return ImageGenerator(framework) 
+    return ImageGenerator(framework)

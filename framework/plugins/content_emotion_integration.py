@@ -6,6 +6,7 @@ Integrates emotional system with content processing for character-driven emotion
 
 import re
 import json
+import sys
 from pathlib import Path
 from typing import Dict, List, Any, Optional, Tuple
 from dataclasses import dataclass, asdict
@@ -14,6 +15,12 @@ import logging
 from datetime import datetime
 
 from core.config import Config
+
+# Add framework to path
+framework_dir = Path(__file__).parent.parent
+sys.path.insert(0, str(framework_dir))
+
+from queue_manager import QueueProcessor
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -90,13 +97,14 @@ class ContentEmotionalAnalysis:
     emotional_summary: str
 
 
-class ContentEmotionIntegration:
+class ContentEmotionIntegration(QueueProcessor):
     """
     Content-Emotion Integration System
     Integrates emotional processing with content analysis for character-driven responses
     """
 
     def __init__(self):
+        super().__init__("content_emotion_integration")
         self.config = Config()
         # Use the current file's location to determine project root
         project_root = Path(__file__).parent.parent.parent
@@ -105,7 +113,7 @@ class ContentEmotionIntegration:
 
         self.emotional_responses = []
         self.character_emotional_profiles = {}
-        self.content_emotional_cache = {}
+        self.content_analyses = {}
 
         # Load existing emotion data
         self._load_emotion_data()
@@ -121,8 +129,8 @@ class ContentEmotionIntegration:
                     self.character_emotional_profiles = data.get(
                         "character_emotional_profiles", {}
                     )
-                    self.content_emotional_cache = data.get(
-                        "content_emotional_cache", {}
+                    self.content_analyses = data.get(
+                        "content_analyses", {}
                     )
                 logger.info("Loaded existing emotion data")
             except Exception as e:
@@ -159,7 +167,7 @@ class ContentEmotionIntegration:
             data = {
                 "emotional_responses": serializable_responses,
                 "character_emotional_profiles": self.character_emotional_profiles,
-                "content_emotional_cache": self.content_emotional_cache,
+                "content_analyses": self.content_analyses,
             }
             with open(emotion_file, "w") as f:
                 json.dump(data, f, indent=2)
@@ -181,11 +189,11 @@ class ContentEmotionIntegration:
             ContentEmotionalAnalysis object with emotional insights
         """
         if content_id is None:
-            content_id = f"content_{len(self.content_emotional_cache)}"
+            content_id = f"content_{len(self.content_analyses)}"
 
         # Check cache first
-        if content_id in self.content_emotional_cache:
-            cached_data = self.content_emotional_cache[content_id]
+        if content_id in self.content_analyses:
+            cached_data = self.content_analyses[content_id]
             # Convert cached dict back to ContentEmotionalAnalysis object
             if isinstance(cached_data, dict):
                 return ContentEmotionalAnalysis(
@@ -245,7 +253,7 @@ class ContentEmotionIntegration:
             "character_emotional_impact": analysis.character_emotional_impact,
             "emotional_summary": analysis.emotional_summary,
         }
-        self.content_emotional_cache[content_id] = analysis_dict
+        self.content_analyses[content_id] = analysis_dict
 
         return analysis
 
@@ -668,7 +676,7 @@ class ContentEmotionIntegration:
             "characters_with_emotional_profiles": list(
                 self.character_emotional_profiles.keys()
             ),
-            "content_analyses_performed": len(self.content_emotional_cache),
+            "content_analyses_performed": len(self.content_analyses),
             "most_common_emotions": self._get_most_common_emotions(),
             "emotional_intensity_distribution": self._get_emotional_intensity_distribution(),
         }
@@ -707,7 +715,7 @@ class ContentEmotionIntegration:
         """Reset all emotion data"""
         self.emotional_responses = []
         self.character_emotional_profiles = {}
-        self.content_emotional_cache = {}
+        self.content_analyses = {}
         self._save_emotion_data()
         logger.info("Emotion data reset")
 

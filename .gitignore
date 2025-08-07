@@ -3,6 +3,7 @@
 *.env
 .env.local
 .env.production
+.env*
 
 # Python
 __pycache__/
@@ -33,6 +34,7 @@ env/
 ENV/
 env.bak/
 venv.bak/
+.venv/
 
 # IDE
 .vscode/
@@ -53,9 +55,12 @@ Thumbs.db
 # Logs
 *.log
 logs/
+logs/development/
+logs/errors/
 
 # Data files
 data/
+data/system_backups/
 models/training_data/
 *.json
 !requirements.txt
@@ -65,12 +70,91 @@ models/training_data/
 image/output/
 video/output/
 voice/output/
+audio/output/
 
 # Temporary files
 *.tmp
 *.temp
 .cache/
+temp/
+tmp/
 
 # Discord bot token (extra protection)
 token.txt
-discord_token.txt 
+discord_token.txt
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Analysis files
+project_analysis.json
+analysis_*.json
+
+# Test coverage
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Documentation builds
+docs/_build/
+docs/build/
+
+# Large media files
+*.mp4
+*.avi
+*.mov
+*.wmv
+*.flv
+*.webm
+*.mkv
+
+# Audio files
+*.wav
+*.mp3
+*.flac
+*.aac
+*.ogg
+
+# Image files (except small ones)
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+*.tiff
+*.webp
+
+# Compressed files
+*.zip
+*.rar
+*.7z
+*.tar
+*.gz
+*.bz2
+
+# Simulacra specific
+Simulacra_Rancher_Project/data/
+Simulacra_Rancher_Project/logs/
+Simulacra_Rancher_Project/My Games/
+
+# Development files
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+*.so
+
+# Jupyter notebooks
+*.ipynb
+.ipynb_checkpoints/
+
+# Environment files
+.env*
+!.env.example 

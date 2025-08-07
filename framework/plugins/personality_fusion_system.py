@@ -6,12 +6,19 @@ Allows Luna to combine personalities for unique perspectives and capabilities
 
 import json
 import time
+import sys
 from pathlib import Path
 from typing import Dict, List, Any, Optional, Tuple
 from dataclasses import dataclass, field
 from enum import Enum
 import logging
 import random
+
+# Add framework to path
+framework_dir = Path(__file__).parent.parent
+sys.path.insert(0, str(framework_dir))
+
+from queue_manager import QueueProcessor
 
 logger = logging.getLogger(__name__)
 
@@ -45,10 +52,11 @@ class FusedPersonality:
     created_at: float = field(default_factory=time.time)
 
 
-class PersonalityFusionSystem:
+class PersonalityFusionSystem(QueueProcessor):
     """System for creating fused personalities with unique capabilities"""
     
     def __init__(self):
+        super().__init__("personality_fusion_system")
         self.fusion_recipes = self._initialize_fusion_recipes()
         self.active_fusions = {}
         self.fusion_history = []

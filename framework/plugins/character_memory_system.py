@@ -6,6 +6,7 @@ Provides character-specific memory and knowledge, backstory integration, and rel
 
 import re
 import json
+import sys
 from pathlib import Path
 from typing import Dict, List, Any, Optional, Tuple
 from dataclasses import dataclass, asdict
@@ -14,6 +15,12 @@ import logging
 from datetime import datetime
 
 from core.config import Config
+
+# Add framework to path
+framework_dir = Path(__file__).parent.parent
+sys.path.insert(0, str(framework_dir))
+
+from queue_manager import QueueProcessor
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -83,13 +90,14 @@ class Relationship:
     relationship_history: List[str]
 
 
-class CharacterMemorySystem:
+class CharacterMemorySystem(QueueProcessor):
     """
     Character Memory System
     Provides character-specific memory and knowledge management
     """
 
     def __init__(self):
+        super().__init__("character_memory_system")
         self.config = Config()
         # Use the current file's location to determine project root
         project_root = Path(__file__).parent.parent.parent
@@ -149,6 +157,325 @@ class CharacterMemorySystem:
             logger.info("Saved memory data")
         except Exception as e:
             logger.error(f"Error saving memory data: {e}")
+
+    def _process_item(self, item):
+        """Process queue items for character memory system operations"""
+        try:
+            # Extract operation type from data
+            operation_type = item.data.get("type", "unknown")
+            
+            if operation_type == "add_memory":
+                return self._handle_add_memory(item.data)
+            elif operation_type == "get_character_memories":
+                return self._handle_get_character_memories(item.data)
+            elif operation_type == "get_character_knowledge":
+                return self._handle_get_character_knowledge(item.data)
+            elif operation_type == "get_character_relationships":
+                return self._handle_get_character_relationships(item.data)
+            elif operation_type == "get_character_skills":
+                return self._handle_get_character_skills(item.data)
+            elif operation_type == "get_character_personality_traits":
+                return self._handle_get_character_personality_traits(item.data)
+            elif operation_type == "add_backstory":
+                return self._handle_add_backstory(item.data)
+            elif operation_type == "get_character_backstory":
+                return self._handle_get_character_backstory(item.data)
+            elif operation_type == "search_memories":
+                return self._handle_search_memories(item.data)
+            elif operation_type == "get_memory_summary":
+                return self._handle_get_memory_summary(item.data)
+            elif operation_type == "get_relationship_summary":
+                return self._handle_get_relationship_summary(item.data)
+            elif operation_type == "reset_character_memories":
+                return self._handle_reset_character_memories(item.data)
+            elif operation_type == "reset_all_memories":
+                return self._handle_reset_all_memories(item.data)
+            else:
+                # Pass unknown types to base class
+                return super()._process_item(item)
+        except Exception as e:
+            logger.error(f"Error processing character memory system queue item: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_add_memory(self, data):
+        """Handle add memory requests"""
+        try:
+            character_name = data.get("character_name", "")
+            memory_type = data.get("memory_type", "")
+            content = data.get("content", "")
+            importance = data.get("importance", "moderate")
+            associated_characters = data.get("associated_characters", [])
+            emotional_context = data.get("emotional_context", {})
+            context = data.get("context", {})
+            
+            if character_name and memory_type and content:
+                if memory_type == "personal_experience":
+                    mem_type = MemoryType.PERSONAL_EXPERIENCE
+                elif memory_type == "relationship_memory":
+                    mem_type = MemoryType.RELATIONSHIP_MEMORY
+                elif memory_type == "knowledge_memory":
+                    mem_type = MemoryType.KNOWLEDGE_MEMORY
+                elif memory_type == "emotional_memory":
+                    mem_type = MemoryType.EMOTIONAL_MEMORY
+                elif memory_type == "skill_memory":
+                    mem_type = MemoryType.SKILL_MEMORY
+                elif memory_type == "backstory_memory":
+                    mem_type = MemoryType.BACKSTORY_MEMORY
+                else:
+                    mem_type = MemoryType.PERSONAL_EXPERIENCE
+                
+                if importance == "critical":
+                    imp = MemoryImportance.CRITICAL
+                elif importance == "important":
+                    imp = MemoryImportance.IMPORTANT
+                elif importance == "moderate":
+                    imp = MemoryImportance.MODERATE
+                elif importance == "minor":
+                    imp = MemoryImportance.MINOR
+                elif importance == "trivial":
+                    imp = MemoryImportance.TRIVIAL
+                else:
+                    imp = MemoryImportance.MODERATE
+                
+                memory = self.add_memory(character_name, mem_type, content, imp, associated_characters, emotional_context, context)
+                return {
+                    "status": "success",
+                    "memory": memory,
+                    "character_name": character_name
+                }
+            else:
+                return {"error": "Missing required parameters", "status": "failed"}
+        except Exception as e:
+            logger.error(f"Error in add memory: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_get_character_memories(self, data):
+        """Handle get character memories requests"""
+        try:
+            character_name = data.get("character_name", "")
+            memory_type = data.get("memory_type", "")
+            
+            if character_name:
+                if memory_type:
+                    if memory_type == "personal_experience":
+                        mem_type = MemoryType.PERSONAL_EXPERIENCE
+                    elif memory_type == "relationship_memory":
+                        mem_type = MemoryType.RELATIONSHIP_MEMORY
+                    elif memory_type == "knowledge_memory":
+                        mem_type = MemoryType.KNOWLEDGE_MEMORY
+                    elif memory_type == "emotional_memory":
+                        mem_type = MemoryType.EMOTIONAL_MEMORY
+                    elif memory_type == "skill_memory":
+                        mem_type = MemoryType.SKILL_MEMORY
+                    elif memory_type == "backstory_memory":
+                        mem_type = MemoryType.BACKSTORY_MEMORY
+                    else:
+                        mem_type = None
+                else:
+                    mem_type = None
+                
+                memories = self.get_character_memories(character_name, mem_type)
+                return {
+                    "status": "success",
+                    "memories": memories,
+                    "character_name": character_name
+                }
+            else:
+                return {"error": "Missing character_name", "status": "failed"}
+        except Exception as e:
+            logger.error(f"Error in get character memories: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_get_character_knowledge(self, data):
+        """Handle get character knowledge requests"""
+        try:
+            character_name = data.get("character_name", "")
+            if character_name:
+                knowledge = self.get_character_knowledge(character_name)
+                return {
+                    "status": "success",
+                    "knowledge": knowledge,
+                    "character_name": character_name
+                }
+            else:
+                return {"error": "Missing character_name", "status": "failed"}
+        except Exception as e:
+            logger.error(f"Error in get character knowledge: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_get_character_relationships(self, data):
+        """Handle get character relationships requests"""
+        try:
+            character_name = data.get("character_name", "")
+            if character_name:
+                relationships = self.get_character_relationships(character_name)
+                return {
+                    "status": "success",
+                    "relationships": relationships,
+                    "character_name": character_name
+                }
+            else:
+                return {"error": "Missing character_name", "status": "failed"}
+        except Exception as e:
+            logger.error(f"Error in get character relationships: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_get_character_skills(self, data):
+        """Handle get character skills requests"""
+        try:
+            character_name = data.get("character_name", "")
+            if character_name:
+                skills = self.get_character_skills(character_name)
+                return {
+                    "status": "success",
+                    "skills": skills,
+                    "character_name": character_name
+                }
+            else:
+                return {"error": "Missing character_name", "status": "failed"}
+        except Exception as e:
+            logger.error(f"Error in get character skills: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_get_character_personality_traits(self, data):
+        """Handle get character personality traits requests"""
+        try:
+            character_name = data.get("character_name", "")
+            if character_name:
+                traits = self.get_character_personality_traits(character_name)
+                return {
+                    "status": "success",
+                    "traits": traits,
+                    "character_name": character_name
+                }
+            else:
+                return {"error": "Missing character_name", "status": "failed"}
+        except Exception as e:
+            logger.error(f"Error in get character personality traits: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_add_backstory(self, data):
+        """Handle add backstory requests"""
+        try:
+            character_name = data.get("character_name", "")
+            backstory_content = data.get("backstory_content", "")
+            backstory_type = data.get("backstory_type", "general")
+            
+            if character_name and backstory_content:
+                success = self.add_backstory(character_name, backstory_content, backstory_type)
+                return {
+                    "status": "success",
+                    "success": success,
+                    "character_name": character_name
+                }
+            else:
+                return {"error": "Missing character_name or backstory_content", "status": "failed"}
+        except Exception as e:
+            logger.error(f"Error in add backstory: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_get_character_backstory(self, data):
+        """Handle get character backstory requests"""
+        try:
+            character_name = data.get("character_name", "")
+            if character_name:
+                backstory = self.get_character_backstory(character_name)
+                return {
+                    "status": "success",
+                    "backstory": backstory,
+                    "character_name": character_name
+                }
+            else:
+                return {"error": "Missing character_name", "status": "failed"}
+        except Exception as e:
+            logger.error(f"Error in get character backstory: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_search_memories(self, data):
+        """Handle search memories requests"""
+        try:
+            character_name = data.get("character_name", "")
+            query = data.get("query", "")
+            
+            if character_name and query:
+                memories = self.search_memories(character_name, query)
+                return {
+                    "status": "success",
+                    "memories": memories,
+                    "character_name": character_name,
+                    "query": query
+                }
+            else:
+                return {"error": "Missing character_name or query", "status": "failed"}
+        except Exception as e:
+            logger.error(f"Error in search memories: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_get_memory_summary(self, data):
+        """Handle get memory summary requests"""
+        try:
+            character_name = data.get("character_name", "")
+            if character_name:
+                summary = self.get_memory_summary(character_name)
+                return {
+                    "status": "success",
+                    "summary": summary,
+                    "character_name": character_name
+                }
+            else:
+                return {"error": "Missing character_name", "status": "failed"}
+        except Exception as e:
+            logger.error(f"Error in get memory summary: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_get_relationship_summary(self, data):
+        """Handle get relationship summary requests"""
+        try:
+            character_a = data.get("character_a", "")
+            character_b = data.get("character_b", "")
+            
+            if character_a and character_b:
+                summary = self.get_relationship_summary(character_a, character_b)
+                return {
+                    "status": "success",
+                    "summary": summary,
+                    "character_a": character_a,
+                    "character_b": character_b
+                }
+            else:
+                return {"error": "Missing character_a or character_b", "status": "failed"}
+        except Exception as e:
+            logger.error(f"Error in get relationship summary: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_reset_character_memories(self, data):
+        """Handle reset character memories requests"""
+        try:
+            character_name = data.get("character_name", "")
+            if character_name:
+                self.reset_character_memories(character_name)
+                return {
+                    "status": "success",
+                    "message": f"Memories reset for {character_name}",
+                    "character_name": character_name
+                }
+            else:
+                return {"error": "Missing character_name", "status": "failed"}
+        except Exception as e:
+            logger.error(f"Error in reset character memories: {e}")
+            return {"error": str(e), "status": "failed"}
+
+    def _handle_reset_all_memories(self, data):
+        """Handle reset all memories requests"""
+        try:
+            self.reset_all_memories()
+            return {
+                "status": "success",
+                "message": "All memories reset"
+            }
+        except Exception as e:
+            logger.error(f"Error in reset all memories: {e}")
+            return {"error": str(e), "status": "failed"}
 
     def add_memory(
         self,
