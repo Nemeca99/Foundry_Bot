@@ -213,6 +213,62 @@ class EnhancedLunaBot(commands.Bot, QueueProcessor):
             """Show network state"""
             await self.show_simulacra_network_state(ctx)
 
+        # Guild System Commands
+        @self.command(name="guild")
+        async def guild_command(ctx, action: str, *, params: str = ""):
+            """Guild system commands"""
+            await self.handle_guild_command(ctx, action, params)
+
+        @self.command(name="create_guild")
+        async def create_guild_command(ctx, guild_name: str, *, description: str = ""):
+            """Create a new guild"""
+            await self.handle_create_guild(ctx, guild_name, description)
+
+        @self.command(name="join_guild")
+        async def join_guild_command(ctx, guild_id: str):
+            """Join an existing guild"""
+            await self.handle_join_guild(ctx, guild_id)
+
+        @self.command(name="leave_guild")
+        async def leave_guild_command(ctx):
+            """Leave current guild"""
+            await self.handle_leave_guild(ctx)
+
+        @self.command(name="guild_info")
+        async def guild_info_command(ctx, guild_id: str):
+            """Get guild information"""
+            await self.handle_guild_info(ctx, guild_id)
+
+        @self.command(name="guild_status")
+        async def guild_status_command(ctx):
+            """Get your guild status"""
+            await self.handle_guild_status(ctx)
+
+        @self.command(name="guild_leaderboard")
+        async def guild_leaderboard_command(ctx):
+            """Show guild leaderboard"""
+            await self.handle_guild_leaderboard(ctx)
+
+        @self.command(name="add_territory")
+        async def add_territory_command(ctx, territory_name: str, territory_type: str):
+            """Add territory to guild"""
+            await self.handle_add_territory(ctx, territory_name, territory_type)
+
+        @self.command(name="embody_guild")
+        async def embody_guild_command(ctx, npc_type: str):
+            """Embody a character for your guild"""
+            await self.handle_embody_guild_character(ctx, npc_type)
+
+        @self.command(name="talk_guild")
+        async def talk_guild_command(ctx, *, message: str):
+            """Talk to your guild's embodied character"""
+            await self.handle_talk_guild_character(ctx, message)
+
+        @self.command(name="disband_guild")
+        async def disband_guild_command(ctx):
+            """Disband your guild (leader only)"""
+            await self.handle_disband_guild(ctx)
+
     async def handle_luna_interaction(self, ctx_or_message, message_text):
         """Handle main Luna interaction with emotional response using global weight system"""
 
@@ -1320,6 +1376,388 @@ You are Luna, an AI writing companion with emotional intelligence. Respond to th
             
         except Exception as e:
             await ctx.send(f"❌ Error showing memories: {str(e)}")
+
+    # Guild System Command Handlers
+    async def handle_guild_command(self, ctx, action: str, params: str):
+        """Handle guild system commands"""
+        try:
+            from framework.plugins.guild_system import GuildSystem
+            
+            # Initialize guild system
+            guild_system = GuildSystem()
+            user_id = str(ctx.author.id)
+            
+            if action == "help":
+                await self._send_guild_help(ctx)
+            
+            elif action == "list":
+                result = await guild_system.get_guild_leaderboard()
+                await self._send_guild_leaderboard(ctx, result)
+            
+            elif action == "status":
+                result = await guild_system.get_user_guild_status(user_id)
+                await self._send_guild_status(ctx, result)
+            
+            else:
+                await ctx.send(f"❌ Unknown guild command: {action}. Use `!guild help` for available commands.")
+                
+        except Exception as e:
+            await ctx.send(f"❌ Error in guild command: {str(e)}")
+
+    async def handle_create_guild(self, ctx, guild_name: str, description: str):
+        """Handle guild creation"""
+        try:
+            from framework.plugins.guild_system import GuildSystem
+            
+            guild_system = GuildSystem()
+            user_id = str(ctx.author.id)
+            
+            result = await guild_system.create_guild(user_id, guild_name, description)
+            await self._send_guild_result(ctx, "Create Guild", result)
+            
+        except Exception as e:
+            await ctx.send(f"❌ Error creating guild: {str(e)}")
+
+    async def handle_join_guild(self, ctx, guild_id: str):
+        """Handle joining a guild"""
+        try:
+            from framework.plugins.guild_system import GuildSystem
+            
+            guild_system = GuildSystem()
+            user_id = str(ctx.author.id)
+            
+            result = await guild_system.join_guild(user_id, guild_id)
+            await self._send_guild_result(ctx, "Join Guild", result)
+            
+        except Exception as e:
+            await ctx.send(f"❌ Error joining guild: {str(e)}")
+
+    async def handle_leave_guild(self, ctx):
+        """Handle leaving a guild"""
+        try:
+            from framework.plugins.guild_system import GuildSystem
+            
+            guild_system = GuildSystem()
+            user_id = str(ctx.author.id)
+            
+            result = await guild_system.leave_guild(user_id)
+            await self._send_guild_result(ctx, "Leave Guild", result)
+            
+        except Exception as e:
+            await ctx.send(f"❌ Error leaving guild: {str(e)}")
+
+    async def handle_guild_info(self, ctx, guild_id: str):
+        """Handle getting guild information"""
+        try:
+            from framework.plugins.guild_system import GuildSystem
+            
+            guild_system = GuildSystem()
+            
+            result = await guild_system.get_guild_info(guild_id)
+            await self._send_guild_info(ctx, result)
+            
+        except Exception as e:
+            await ctx.send(f"❌ Error getting guild info: {str(e)}")
+
+    async def handle_guild_status(self, ctx):
+        """Handle getting user's guild status"""
+        try:
+            from framework.plugins.guild_system import GuildSystem
+            
+            guild_system = GuildSystem()
+            user_id = str(ctx.author.id)
+            
+            result = await guild_system.get_user_guild_status(user_id)
+            await self._send_guild_status(ctx, result)
+            
+        except Exception as e:
+            await ctx.send(f"❌ Error getting guild status: {str(e)}")
+
+    async def handle_guild_leaderboard(self, ctx):
+        """Handle guild leaderboard"""
+        try:
+            from framework.plugins.guild_system import GuildSystem
+            
+            guild_system = GuildSystem()
+            
+            result = await guild_system.get_guild_leaderboard()
+            await self._send_guild_leaderboard(ctx, result)
+            
+        except Exception as e:
+            await ctx.send(f"❌ Error getting guild leaderboard: {str(e)}")
+
+    async def handle_add_territory(self, ctx, territory_name: str, territory_type: str):
+        """Handle adding territory to guild"""
+        try:
+            from framework.plugins.guild_system import GuildSystem
+            
+            guild_system = GuildSystem()
+            user_id = str(ctx.author.id)
+            
+            # Get user's guild
+            status_result = await guild_system.get_user_guild_status(user_id)
+            if not status_result.get("in_guild"):
+                await ctx.send("❌ You must be in a guild to add territories")
+                return
+            
+            guild_id = status_result["guild"]["id"]
+            result = await guild_system.add_guild_territory(guild_id, territory_name, territory_type)
+            await self._send_guild_result(ctx, "Add Territory", result)
+            
+        except Exception as e:
+            await ctx.send(f"❌ Error adding territory: {str(e)}")
+
+    async def handle_embody_guild_character(self, ctx, npc_type: str):
+        """Handle embodying a character for guild"""
+        try:
+            from framework.plugins.guild_system import GuildSystem
+            
+            guild_system = GuildSystem()
+            user_id = str(ctx.author.id)
+            
+            # Get user's guild
+            status_result = await guild_system.get_user_guild_status(user_id)
+            if not status_result.get("in_guild"):
+                await ctx.send("❌ You must be in a guild to embody characters")
+                return
+            
+            guild_id = status_result["guild"]["id"]
+            result = await guild_system.embody_guild_character(guild_id, user_id, npc_type)
+            await self._send_guild_result(ctx, "Embody Guild Character", result)
+            
+        except Exception as e:
+            await ctx.send(f"❌ Error embodying guild character: {str(e)}")
+
+    async def handle_talk_guild_character(self, ctx, message: str):
+        """Handle talking to guild character"""
+        try:
+            from framework.plugins.guild_system import GuildSystem
+            
+            guild_system = GuildSystem()
+            user_id = str(ctx.author.id)
+            
+            # Get user's guild
+            status_result = await guild_system.get_user_guild_status(user_id)
+            if not status_result.get("in_guild"):
+                await ctx.send("❌ You must be in a guild to talk to guild characters")
+                return
+            
+            guild_id = status_result["guild"]["id"]
+            result = await guild_system.interact_with_guild_character(guild_id, user_id, message)
+            await self._send_guild_result(ctx, "Talk to Guild Character", result)
+            
+        except Exception as e:
+            await ctx.send(f"❌ Error talking to guild character: {str(e)}")
+
+    async def handle_disband_guild(self, ctx):
+        """Handle disbanding a guild"""
+        try:
+            from framework.plugins.guild_system import GuildSystem
+            
+            guild_system = GuildSystem()
+            user_id = str(ctx.author.id)
+            
+            result = await guild_system.disband_guild(user_id)
+            await self._send_guild_result(ctx, "Disband Guild", result)
+            
+        except Exception as e:
+            await ctx.send(f"❌ Error disbanding guild: {str(e)}")
+
+    async def _send_guild_help(self, ctx):
+        """Send guild help information"""
+        embed = discord.Embed(
+            title="🏰 Guild System Commands",
+            description="Available commands for the guild system",
+            color=0x8B4513,
+        )
+
+        commands = [
+            ("!create_guild <name> [description]", "Create a new guild"),
+            ("!join_guild <guild_id>", "Join an existing guild"),
+            ("!leave_guild", "Leave your current guild"),
+            ("!guild_info <guild_id>", "Get detailed guild information"),
+            ("!guild_status", "Get your current guild status"),
+            ("!guild_leaderboard", "Show guild leaderboard"),
+            ("!add_territory <name> <type>", "Add territory to your guild"),
+            ("!embody_guild <npc_type>", "Embody a character for your guild"),
+            ("!talk_guild <message>", "Talk to your guild's embodied character"),
+            ("!disband_guild", "Disband your guild (leader only)"),
+            ("!guild help", "Show this help message"),
+            ("!guild list", "Show guild leaderboard"),
+            ("!guild status", "Show your guild status"),
+        ]
+
+        for cmd, desc in commands:
+            embed.add_field(name=cmd, value=desc, inline=False)
+
+        await ctx.send(embed=embed)
+
+    async def _send_guild_result(self, ctx, title: str, result: Dict[str, Any]):
+        """Send guild command result"""
+        if not result.get("success"):
+            await ctx.send(f"❌ {result.get('error', 'Unknown error')}")
+            return
+
+        embed = discord.Embed(
+            title=f"🏰 {title}",
+            color=0x8B4513
+        )
+
+        # Add relevant fields based on result type
+        if "guild" in result:
+            guild = result["guild"]
+            embed.add_field(
+                name="Guild Name",
+                value=guild["name"],
+                inline=True
+            )
+            embed.add_field(
+                name="Members",
+                value=str(guild["member_count"]),
+                inline=True
+            )
+            embed.add_field(
+                name="Level",
+                value=str(guild["level"]),
+                inline=True
+            )
+
+        if "territory" in result:
+            territory = result["territory"]
+            embed.add_field(
+                name="Territory",
+                value=f"{territory['name']} ({territory['type']})",
+                inline=True
+            )
+
+        if "message" in result:
+            embed.add_field(
+                name="Status",
+                value=result["message"],
+                inline=False
+            )
+
+        await ctx.send(embed=embed)
+
+    async def _send_guild_info(self, ctx, result: Dict[str, Any]):
+        """Send guild information"""
+        if not result.get("success"):
+            await ctx.send(f"❌ {result.get('error', 'Unknown error')}")
+            return
+
+        guild = result["guild"]
+        members = result["members"]
+        territories = result["territories"]
+        embodiments = result["embodiments"]
+
+        embed = discord.Embed(
+            title=f"🏰 {guild['name']}",
+            description=guild.get("description", "No description"),
+            color=0x8B4513
+        )
+
+        # Guild info
+        embed.add_field(
+            name="Guild Info",
+            value=f"Level: {guild['level']}\nMembers: {guild['member_count']}\nExperience: {guild['experience']}",
+            inline=True
+        )
+
+        # Resources
+        resources = guild.get("resources", {})
+        embed.add_field(
+            name="Resources",
+            value=f"Gold: {resources.get('gold', 0)}\nMaterials: {resources.get('materials', 0)}\nInfluence: {resources.get('influence', 0)}",
+            inline=True
+        )
+
+        # Territories
+        embed.add_field(
+            name="Territories",
+            value=f"Count: {len(territories)}",
+            inline=True
+        )
+
+        # Members
+        if members:
+            member_list = "\n".join([f"• {m['user_id']} ({m['role']})" for m in members[:5]])
+            if len(members) > 5:
+                member_list += f"\n... and {len(members) - 5} more"
+            embed.add_field(
+                name="Members",
+                value=member_list,
+                inline=False
+            )
+
+        await ctx.send(embed=embed)
+
+    async def _send_guild_status(self, ctx, result: Dict[str, Any]):
+        """Send guild status"""
+        if not result.get("success"):
+            await ctx.send(f"❌ {result.get('error', 'Unknown error')}")
+            return
+
+        if not result.get("in_guild"):
+            embed = discord.Embed(
+                title="🏰 Guild Status",
+                description="You are not a member of any guild",
+                color=0x8B4513
+            )
+        else:
+            guild = result["guild"]
+            member_data = result["member_data"]
+            active_embodiment = result.get("active_embodiment")
+
+            embed = discord.Embed(
+                title="🏰 Guild Status",
+                description=f"You are a member of **{guild['name']}**",
+                color=0x8B4513
+            )
+
+            embed.add_field(
+                name="Your Role",
+                value=member_data["role"].title(),
+                inline=True
+            )
+
+            embed.add_field(
+                name="Contribution",
+                value=str(member_data["contribution"]),
+                inline=True
+            )
+
+            if active_embodiment:
+                embed.add_field(
+                    name="Active Character",
+                    value=active_embodiment["npc_type"].title(),
+                    inline=True
+                )
+
+        await ctx.send(embed=embed)
+
+    async def _send_guild_leaderboard(self, ctx, result: Dict[str, Any]):
+        """Send guild leaderboard"""
+        if not result.get("success"):
+            await ctx.send(f"❌ {result.get('error', 'Unknown error')}")
+            return
+
+        leaderboard = result["leaderboard"]
+        total_guilds = result["total_guilds"]
+
+        embed = discord.Embed(
+            title="🏰 Guild Leaderboard",
+            description=f"Top guilds out of {total_guilds} total",
+            color=0x8B4513
+        )
+
+        for i, guild in enumerate(leaderboard[:10], 1):  # Show top 10
+            embed.add_field(
+                name=f"#{i} {guild['name']}",
+                value=f"Score: {guild['score']:,}\nMembers: {guild['member_count']}\nLevel: {guild['level']}\nTerritories: {guild['territories']}\nEmbodiments: {guild['embodiments']}",
+                inline=True
+            )
+
+        await ctx.send(embed=embed)
 
     async def _send_unified_status(self, ctx, result: Dict[str, Any]):
         """Send unified status information"""
