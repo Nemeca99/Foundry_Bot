@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Enhanced Luna Discord Bot
-Provides sophisticated emotional system integration
+Provides sophisticated emotional system integration with unified Luna-Simulacra system
 """
 
 import discord
@@ -28,10 +28,18 @@ from dynamic_emotion_engine import (
     EnhancedDynamicEmotionEngine,
 )
 
+# Import unified integration
+try:
+    from framework.plugins.luna_simulacra_integration import LunaSimulacraIntegration
+    UNIFIED_INTEGRATION_AVAILABLE = True
+except ImportError as e:
+    UNIFIED_INTEGRATION_AVAILABLE = False
+    logging.warning(f"⚠️ Unified Luna-Simulacra integration not available: {e}")
+
 
 class EnhancedLunaBot(commands.Bot, QueueProcessor):
     """
-    Enhanced Luna Discord Bot with sophisticated emotional system
+    Enhanced Luna Discord Bot with unified Luna-Simulacra integration
     """
 
     def __init__(self, command_prefix="!", intents=None):
@@ -50,6 +58,14 @@ class EnhancedLunaBot(commands.Bot, QueueProcessor):
 
         # Load emotional state
         self.emotional_meter.load_state("data/luna_emotional_state.json")
+
+        # Initialize unified integration if available
+        if UNIFIED_INTEGRATION_AVAILABLE:
+            self.unified_integration = LunaSimulacraIntegration()
+            self.logger.info("✅ Unified Luna-Simulacra integration initialized")
+        else:
+            self.unified_integration = None
+            self.logger.warning("⚠️ Unified integration not available, using legacy systems")
 
         # Track user interactions
         self.user_interactions = {}
@@ -100,92 +116,102 @@ class EnhancedLunaBot(commands.Bot, QueueProcessor):
             """Build up Luna's emotional state"""
             await self.build_emotional_state(ctx, emotion_type)
 
-        # Simulacra Game Commands
+        # Unified Luna-Simulacra commands
+        @self.command(name="unified")
+        async def unified_command(ctx, action: str, *, params: str = ""):
+            """Unified Luna-Simulacra system commands"""
+            await self.handle_unified_command(ctx, action, params)
+
+        @self.command(name="dm")
+        async def dm_command(ctx, *, command: str):
+            """Luna as Game DM"""
+            await self.handle_luna_as_dm(ctx, command)
+
+        @self.command(name="embody")
+        async def embody_command(ctx, npc_type: str):
+            """Embody an emotional character"""
+            await self.handle_embody_character(ctx, npc_type)
+
+        @self.command(name="talk")
+        async def talk_command(ctx, npc_type: str, *, message: str):
+            """Talk to embodied character"""
+            await self.handle_talk_to_character(ctx, npc_type, message)
+
+        @self.command(name="npcs")
+        async def npcs_command(ctx):
+            """Show available NPCs"""
+            await self.show_available_npcs(ctx)
+
+        @self.command(name="release_npc")
+        async def release_npc_command(ctx, npc_type: str):
+            """Release character embodiment"""
+            await self.handle_release_character(ctx, npc_type)
+
+        @self.command(name="memories")
+        async def memories_command(ctx, npc_type: str):
+            """Show character memories"""
+            await self.show_character_memories(ctx, npc_type)
+
+        # Legacy Simulacra commands (for backward compatibility)
         @self.command(name="simulacra")
         async def simulacra_command(ctx, action: str, *, params: str = ""):
-            """Main Simulacra game command"""
+            """Legacy Simulacra commands"""
             await self.handle_simulacra_command(ctx, action, params)
 
         @self.command(name="hatch")
         async def hatch_command(ctx, drone_type: str = "standard", *, name: str = ""):
-            """Hatch a new Simulacra drone"""
+            """Hatch Simulacra drone"""
             await self.hatch_simulacra_drone(ctx, drone_type, name)
 
         @self.command(name="simulate")
         async def simulate_command(ctx, duration: int = 60, drone_count: int = 10):
-            """Simulate the Simulacra world"""
+            """Simulate Simulacra world"""
             await self.simulate_simulacra_world(ctx, duration, drone_count)
 
         @self.command(name="gacha")
         async def gacha_command(ctx, amount: int = 1):
-            """Perform a gacha pull"""
+            """Gacha pull"""
             await self.simulacra_gacha_pull(ctx, amount)
 
         @self.command(name="drone")
         async def drone_command(ctx, *, drone_name: str):
-            """Get information about a Simulacra drone"""
+            """Get drone info"""
             await self.get_simulacra_drone_info(ctx, drone_name)
 
         @self.command(name="kingdom")
         async def kingdom_command(ctx, action: str, *, params: str = ""):
-            """Manage Simulacra kingdoms"""
+            """Kingdom management"""
             await self.manage_simulacra_kingdom(ctx, action, params)
 
         @self.command(name="resources")
         async def resources_command(ctx, action: str, *, params: str = ""):
-            """Manage Simulacra resources"""
+            """Resource management"""
             await self.manage_simulacra_resources(ctx, action, params)
 
         @self.command(name="hunt")
         async def hunt_command(ctx, action: str, *, params: str = ""):
-            """Manage Simulacra hunting"""
+            """Hunting management"""
             await self.manage_simulacra_hunting(ctx, action, params)
 
         @self.command(name="trade")
         async def trade_command(ctx, action: str, *, params: str = ""):
-            """Manage Simulacra trading"""
+            """Trade management"""
             await self.manage_simulacra_trade(ctx, action, params)
 
         @self.command(name="leaderboard")
         async def leaderboard_command(ctx):
-            """Show Simulacra leaderboard"""
+            """Show leaderboard"""
             await self.show_simulacra_leaderboard(ctx)
 
         @self.command(name="disasters")
         async def disasters_command(ctx):
-            """Show active Simulacra disasters"""
+            """Show disasters"""
             await self.show_simulacra_disasters(ctx)
 
         @self.command(name="network")
         async def network_command(ctx):
-            """Show Simulacra network consciousness state"""
+            """Show network state"""
             await self.show_simulacra_network_state(ctx)
-
-        # Luna NPC Integration Commands
-        @self.command(name="embody")
-        async def embody_command(ctx, npc_type: str):
-            """Embody a Luna emotional fragment as an NPC"""
-            await self.embody_luna_npc(ctx, npc_type)
-
-        @self.command(name="talk")
-        async def talk_command(ctx, npc_type: str, *, message: str):
-            """Talk to an embodied Luna NPC"""
-            await self.talk_to_luna_npc(ctx, npc_type, message)
-
-        @self.command(name="npcs")
-        async def npcs_command(ctx):
-            """Show currently active Luna NPCs"""
-            await self.show_active_luna_npcs(ctx)
-
-        @self.command(name="release_npc")
-        async def release_npc_command(ctx, npc_type: str):
-            """Release an embodied Luna NPC"""
-            await self.release_luna_npc(ctx, npc_type)
-
-        @self.command(name="memories")
-        async def memories_command(ctx, npc_type: str):
-            """Show memories of interactions with a Luna NPC"""
-            await self.show_npc_memories(ctx, npc_type)
 
     async def handle_luna_interaction(self, ctx_or_message, message_text):
         """Handle main Luna interaction with emotional response using global weight system"""
@@ -1154,6 +1180,233 @@ You are Luna, an AI writing companion with emotional intelligence. Respond to th
 
         except Exception as e:
             await ctx.send(f"❌ Error getting NPC memories: {str(e)}")
+
+    async def handle_unified_command(self, ctx, action: str, params: str):
+        """Handle unified Luna-Simulacra commands"""
+        if not self.unified_integration:
+            await ctx.send("❌ Unified integration not available")
+            return
+
+        try:
+            user_id = str(ctx.author.id)
+            
+            if action == "status":
+                result = await self.unified_integration.get_unified_status()
+                await self._send_unified_result(ctx, "Unified Status", result)
+            
+            elif action == "dm":
+                result = await self.unified_integration.luna_as_game_dm(user_id, params)
+                await self._send_unified_result(ctx, "Luna as Game DM", result)
+            
+            elif action == "embody":
+                result = await self.unified_integration.embody_emotional_character(user_id, params)
+                await self._send_unified_result(ctx, "Character Embodiment", result)
+            
+            elif action == "talk":
+                # Parse npc_type and message from params
+                parts = params.split(" ", 1)
+                if len(parts) < 2:
+                    await ctx.send("❌ Usage: !unified talk <npc_type> <message>")
+                    return
+                
+                npc_type = parts[0]
+                message = parts[1]
+                result = await self.unified_integration.interact_with_embodied_character(user_id, message)
+                await self._send_unified_result(ctx, f"Talk to {npc_type}", result)
+            
+            elif action == "release":
+                result = await self.unified_integration.release_character_embodiment(user_id)
+                await self._send_unified_result(ctx, "Release Character", result)
+            
+            else:
+                await ctx.send(f"❌ Unknown unified command: {action}")
+                
+        except Exception as e:
+            await ctx.send(f"❌ Error in unified command: {str(e)}")
+
+    async def handle_luna_as_dm(self, ctx, command: str):
+        """Handle Luna as Game DM command"""
+        if not self.unified_integration:
+            await ctx.send("❌ Unified integration not available")
+            return
+
+        try:
+            user_id = str(ctx.author.id)
+            result = await self.unified_integration.luna_as_game_dm(user_id, command)
+            await self._send_unified_result(ctx, "Luna as Game DM", result)
+            
+        except Exception as e:
+            await ctx.send(f"❌ Error with Luna as DM: {str(e)}")
+
+    async def handle_embody_character(self, ctx, npc_type: str):
+        """Handle character embodiment command"""
+        if not self.unified_integration:
+            await ctx.send("❌ Unified integration not available")
+            return
+
+        try:
+            user_id = str(ctx.author.id)
+            result = await self.unified_integration.embody_emotional_character(user_id, npc_type)
+            await self._send_unified_result(ctx, "Character Embodiment", result)
+            
+        except Exception as e:
+            await ctx.send(f"❌ Error embodying character: {str(e)}")
+
+    async def handle_talk_to_character(self, ctx, npc_type: str, message: str):
+        """Handle talking to embodied character"""
+        if not self.unified_integration:
+            await ctx.send("❌ Unified integration not available")
+            return
+
+        try:
+            user_id = str(ctx.author.id)
+            result = await self.unified_integration.interact_with_embodied_character(user_id, message)
+            await self._send_unified_result(ctx, f"Talk to {npc_type}", result)
+            
+        except Exception as e:
+            await ctx.send(f"❌ Error talking to character: {str(e)}")
+
+    async def show_available_npcs(self, ctx):
+        """Show available NPCs"""
+        if not self.unified_integration:
+            await ctx.send("❌ Unified integration not available")
+            return
+
+        try:
+            status = await self.unified_integration.get_unified_status()
+            npcs = status.get("available_npcs", [])
+            
+            embed = discord.Embed(
+                title="Available NPCs",
+                description="Luna can embody these emotional characters:",
+                color=0x9b59b6
+            )
+            
+            for npc in npcs:
+                embed.add_field(
+                    name=npc.title(),
+                    value=f"Emotional character available for embodiment",
+                    inline=True
+                )
+            
+            await ctx.send(embed=embed)
+            
+        except Exception as e:
+            await ctx.send(f"❌ Error showing NPCs: {str(e)}")
+
+    async def handle_release_character(self, ctx, npc_type: str):
+        """Handle releasing character embodiment"""
+        if not self.unified_integration:
+            await ctx.send("❌ Unified integration not available")
+            return
+
+        try:
+            user_id = str(ctx.author.id)
+            result = await self.unified_integration.release_character_embodiment(user_id)
+            await self._send_unified_result(ctx, "Release Character", result)
+            
+        except Exception as e:
+            await ctx.send(f"❌ Error releasing character: {str(e)}")
+
+    async def show_character_memories(self, ctx, npc_type: str):
+        """Show character memories"""
+        if not self.unified_integration:
+            await ctx.send("❌ Unified integration not available")
+            return
+
+        try:
+            # This would need to be implemented in the integration
+            await ctx.send(f"📝 Memories for {npc_type} - Feature coming soon!")
+            
+        except Exception as e:
+            await ctx.send(f"❌ Error showing memories: {str(e)}")
+
+    async def _send_unified_status(self, ctx, result: Dict[str, Any]):
+        """Send unified status information"""
+        if not result.get("success"):
+            await ctx.send(f"❌ {result.get('error', 'Unknown error')}")
+            return
+
+        embed = discord.Embed(
+            title="Unified Luna-Simulacra Status",
+            color=0x9b59b6
+        )
+
+        # Luna emotional state
+        luna_state = result.get("luna_emotional_state", {})
+        embed.add_field(
+            name="Luna's Emotional State",
+            value=f"Level: {luna_state.get('current_level', 'Unknown'):.3f}\nState: {luna_state.get('current_state', 'Unknown')}",
+            inline=True
+        )
+
+        # Game state
+        game_state = result.get("simulacra_game_state", {})
+        embed.add_field(
+            name="Simulacra Game State",
+            value=f"Status: {game_state.get('status', 'Unknown')}",
+            inline=True
+        )
+
+        # Active embodiments
+        embodiments = result.get("active_embodiments", [])
+        embed.add_field(
+            name="Active Character Embodiments",
+            value=f"Count: {len(embodiments)}",
+            inline=True
+        )
+
+        await ctx.send(embed=embed)
+
+    async def _send_unified_result(self, ctx, title: str, result: Dict[str, Any]):
+        """Send unified command result"""
+        if not result.get("success"):
+            await ctx.send(f"❌ {result.get('error', 'Unknown error')}")
+            return
+
+        embed = discord.Embed(
+            title=title,
+            color=0x9b59b6
+        )
+
+        # Add relevant fields based on result type
+        if "dm_response" in result:
+            embed.add_field(
+                name="Luna's Response",
+                value=result["dm_response"],
+                inline=False
+            )
+
+        if "npc_type" in result:
+            embed.add_field(
+                name="Character",
+                value=result["npc_type"].title(),
+                inline=True
+            )
+
+        if "response" in result:
+            embed.add_field(
+                name="Response",
+                value=result["response"],
+                inline=False
+            )
+
+        if "emotional_state" in result:
+            emotion = result["emotional_state"]
+            embed.add_field(
+                name="Emotional State",
+                value=f"Level: {emotion.get('new_level', 'Unknown'):.3f}\nState: {emotion.get('state', 'Unknown')}",
+                inline=True
+            )
+
+        if "message" in result:
+            embed.add_field(
+                name="Status",
+                value=result["message"],
+                inline=False
+            )
+
+        await ctx.send(embed=embed)
 
     async def _send_simulacra_help(self, ctx):
         """Send Simulacra help information"""
